@@ -1,0 +1,9 @@
+transcript
+tags
+work/
+work*/
+*.svf
+dc_files/
+*.txt
+*.log
+alib-52/

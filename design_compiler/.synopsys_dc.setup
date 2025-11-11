@@ -1,0 +1,4 @@
+set link_library { /CMC/kits/tsmc_65nm_libs/tcbn65gplus_200a/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn65gplus_200a/tcbn65gplusbc_ccs.db }
+set target_library { /CMC/kits/tsmc_65nm_libs/tcbn65gplus_200a/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn65gplus_200a/tcbn65gplusbc_ccs.db }
+
+define_design_lib work -path ./WORK
