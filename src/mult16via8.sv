@@ -12,32 +12,19 @@ module mult16bvia8bit (
   // Reference: Yin et al., "Design and Analysis of Energy-Efficient Dynamic Range
   // Approximate Logarithmic Multipliers for Machine Learning", IEEE TSUSC 2021
 
-  // Optimal configuration: 1 DR-ALM for ouP[0], exact for others (69% accuracy)
-  // Using all 4 DR-ALMs causes error accumulation (35% accuracy)
+  // Full DR-ALM baseline: all 4 partial products use approximate multipliers
+  // This represents the true paper implementation for comparison
 
-  dr_alm_8bit_signed #(.TRUNC_WIDTH(5)) dr_alm_0 (
-      .i_a(inA[0]),
-      .i_b(inB[0]),
-      .o_z(ouP[0])
-  );
-
-  exact_mult exact_1 (
-      .i_a(inA[1]),
-      .i_b(inB[1]),
-      .o_z(ouP[1])
-  );
-
-  exact_mult exact_2 (
-      .i_a(inA[2]),
-      .i_b(inB[2]),
-      .o_z(ouP[2])
-  );
-
-  exact_mult exact_3 (
-      .i_a(inA[3]),
-      .i_b(inB[3]),
-      .o_z(ouP[3])
-  );
+  genvar i;
+  generate
+    for (i = 0; i < 4; i = i + 1) begin : dr_alm_gen
+      dr_alm_8bit_signed #(.TRUNC_WIDTH(5)) dr_alm_inst (
+          .i_a(inA[i]),
+          .i_b(inB[i]),
+          .o_z(ouP[i])
+      );
+    end
+  endgenerate
   /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   assign inA[0] = {1'b0, i_a[6:0]};
