@@ -78,15 +78,15 @@ module dr_alm_8bit #(
             overflow = sum_x[TRUNC_WIDTH];
 
             // Step 5: Antilogarithmic conversion
-            // Per Algorithm 1: xt = {1'b1, L[t-2:0]}
+            // The mantissa uses upper bits of sum: sum_x[t-1:1] to get proper scaling
             if (overflow) begin
                 // Overflow: x1t + x2t >= 1
                 k_sum = {1'b0, k1} + {1'b0, k2} + 4'd1;
-                xt = {1'b1, sum_x[TRUNC_WIDTH-2:0]};
+                xt = {1'b1, sum_x[TRUNC_WIDTH-1:1]};
             end else begin
                 // No overflow
                 k_sum = {1'b0, k1} + {1'b0, k2};
-                xt = {1'b1, sum_x[TRUNC_WIDTH-2:0]};
+                xt = {1'b1, sum_x[TRUNC_WIDTH-1:1]};
             end
 
             // Step 6: Shift result

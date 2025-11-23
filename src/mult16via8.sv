@@ -1,9 +1,7 @@
 // Multiplier Design Selection:
 // Change the instantiation below to test different designs:
-// - dr_alm_8bit_signed: DR-ALM baseline (35% accuracy)
-// - enhanced_dr_alm_8bit_signed: Enhanced compensation
-// - hybrid_alm_8bit_signed: Exact for small operands
-// - iterative_alm_8bit_signed: Error correction term
+// - dr_alm_16bit_signed: Native 16-bit DR-ALM (paper: MRED 3.03%)
+// - 4x 8-bit approach using dr_alm_8bit_signed
 
 module mult16bvia8bit (
     input  logic signed [15:0] i_a,
@@ -14,15 +12,14 @@ module mult16bvia8bit (
   logic signed [ 7:0] inB[0:3];
   logic signed [15:0] ouP[0:3];
 
-  ///////////////////////////// Instantiate your multiplier here ///////////////////////////////////////
-  // CURRENT DESIGN: Hybrid ALM - BEST PERFORMER (66% accuracy)
-  // Uses exact multiplication for small operands (< threshold)
-  // This reduces error in high relative-error region
+  ///////////////////////////// 4x 8-bit DR-ALM approach ///////////////////////////////////////
+  // CURRENT DESIGN: 4x 8-bit DR-ALM-6
+  // Uses four 8-bit multipliers to compute 16-bit multiplication
 
   genvar i;
   generate
     for (i = 0; i < 4; i = i + 1) begin : mult_gen
-      hybrid_alm_8bit_signed #(.TRUNC_WIDTH(6), .THRESHOLD(8)) mult_inst (
+      dr_alm_8bit_signed #(.TRUNC_WIDTH(6)) mult_inst (
           .i_a(inA[i]),
           .i_b(inB[i]),
           .o_z(ouP[i])
