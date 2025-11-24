@@ -39,10 +39,14 @@ module tb_nmed;
         );
         initial $display("Testing: Iterative ALM");
     `else
-        dr_alm_8bit #(.TRUNC_WIDTH(5)) uut (
+        dr_alm_8bit #(.TRUNC_WIDTH(3)) uut (
             .i_a(a), .i_b(b), .o_z(approx_result)
         );
         initial $display("Testing: DR-ALM Baseline");
+        // dr_alm_core #(.TRUNC_WIDTH(3), .DWIDTH(8)) uut (
+        //     .i_a(a), .i_b(b), .o_z(approx_result)
+        // );
+        // initial $display("Testing: DR-ALM Baseline");
     `endif
 
     // Calculate absolute error
