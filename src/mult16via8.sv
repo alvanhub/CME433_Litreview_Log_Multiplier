@@ -44,7 +44,7 @@ module mult16bvia8bit (
 //     o_z = ouP[0] + (ouP[1] + ouP[2]) * 2 ** 7 + ouP[3] * 2 ** 14;
 //   end
 
-    dr_alm_core #(.DWIDTH(16), .TRUNC_WIDTH(6)) u_dr_alm (
+    dr_alm_core #(.DWIDTH(16), .TRUNC_WIDTH(7)) u_dr_alm (
     // dr_alm_16bit_signed #(.TRUNC_WIDTH(6)) u_dr_alm (
         .i_a(i_a),
         .i_b(i_b),

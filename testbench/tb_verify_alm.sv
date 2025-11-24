@@ -4,7 +4,7 @@ module tb_verify_alm;
   logic signed [15:0] result_approx;
   
   // Instantiating the module you built
-  dr_alm_8bit_signed #(.TRUNC_WIDTH(6)) dut (
+  dr_alm_core #(.TRUNC_WIDTH(3), .DWIDTH(8)) dut (
     .i_a(a),
     .i_b(b),
     .o_z(result_approx)
