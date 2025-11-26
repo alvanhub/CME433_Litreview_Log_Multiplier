@@ -36,7 +36,7 @@ run_and_capture() {
         "exact")
             mult_name="Exact Multiplier"
             mult_version="exact"
-            mult_module="exact_mult"
+            mult_module="dc_exact_16bit"
             ;;
         "base_log")
             mult_name="Base Log Mult"
@@ -45,13 +45,13 @@ run_and_capture() {
             ;;
         "dr_alm")
             mult_name="DR ALM"
-            mult_version="dr_alm_8bit_signed"
-            mult_module="dr_alm_8bit_signed"
+            mult_version="dr_alm_core_16bit7trunc"
+            mult_module="dr_alm_core_16bit7trunc"
             ;;
         "improved")
             mult_name="Improved DR ALM"
             mult_version="improved"
-            mult_module="improved_dr_alm"
+            mult_module="improved_dr_alm_16"
             ;;
         *)
             # Custom multiplier
