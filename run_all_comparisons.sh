@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default multipliers to run if none provided
-DEFAULT_MULTIPLIERS=("exact" "base_log" "dr_alm" "improved")
+DEFAULT_MULTIPLIERS=("EXACT_MULT" "LOG_MULT" "DR_ALM_CORE" "DR_ALM_IMPROVED")
 
 # Check for arguments
 if [ $# -eq 0 ]; then
@@ -33,25 +33,25 @@ run_and_capture() {
 
     # Map type to name/version/module
     case $mult_type in
-        "exact")
+        "EXACT_MULT")
             mult_name="Exact Multiplier"
             mult_version="exact"
             mult_module="dc_exact_16bit"
             ;;
-        "base_log")
+        "LOG_MULT")
             mult_name="Base Log Mult"
             mult_version="base_log"
             mult_module="base_log_mult"
             ;;
-        "dr_alm")
+        "DR_ALM_CORE")
             mult_name="DR ALM"
             mult_version="dr_alm_core_16bit7trunc"
             mult_module="dr_alm_core_16bit7trunc"
             ;;
-        "improved")
+        "DR_ALM_IMPROVED")
             mult_name="Improved DR ALM"
             mult_version="improved"
-            mult_module="improved_dr_alm_16"
+            mult_module="improved_dr_alm_16_7trunc"
             ;;
         *)
             # Custom multiplier
@@ -161,6 +161,24 @@ run_and_capture() {
         POWER[$mult_type]="N/A"
         DELAY[$mult_type]="N/A"
     fi
+    cd ..
+
+    cd sim
+    /bin/csh ./run_tb.sh $mult_type 2>&1 | tee sim_output.txt 
+
+    # Flag errors
+    # local error_count=$(grep "Errors:" sim_output.txt | awk '{print $2}')
+    # if [ "$error_count" -gt 0 ]; then
+    #     echo "    Simulation reported $error_count errors!"
+    # fi
+    # extract stats
+    cd ../python
+    local stats_output=$(python3 get_mnist_stats.py $mult_type 2>&1)
+
+    echo "    Stats Output:"
+    echo "$stats_output"
+    
+    ACCURACY[$mult_type]=$(echo "$stats_output" | grep "Accuracy:" | awk '{print $2}')
     cd ..
 }
 

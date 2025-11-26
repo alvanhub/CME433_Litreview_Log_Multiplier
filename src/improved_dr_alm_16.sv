@@ -139,6 +139,7 @@ module improved_dr_alm_16 #(
     end else begin
       if (sum_frac_restored[14]) begin
         // mantissa >= 1.0
+        int shift_amt;
         shift_amt = (sum_k + 1) - 15;
 
         if (shift_amt >= 0)
@@ -148,6 +149,8 @@ module improved_dr_alm_16 #(
 
       end else begin
         // mantissa < 1.0 → add implicit 1.0 (bit 14)
+        logic [14:0] mantissa;
+        int shift_amt;
         mantissa = (15'h4000 | sum_frac_restored);
         shift_amt = sum_k - 15;
 

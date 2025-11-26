@@ -82,7 +82,8 @@ module base_log_mult (
       if (sum_frac[15]) begin
         // overflow: mantissa is 1.xxxxxxxxxxxxxxx (15 frac bits)
         // scaling = 2^(sum_k + 1)
-        int shift_amount = (sum_k + 1) - 15;
+        int shift_amount;
+        shift_amount = (sum_k + 1) - 15;
 
         if (shift_amount >= 0)
             result_mag = {16'b0, sum_frac} << shift_amount;
@@ -91,8 +92,10 @@ module base_log_mult (
 
       end else begin
         // no overflow: value = 1 + fractional mantissa
-        logic [15:0] mantissa = (16'h8000 | sum_frac);  // leading 1 + 15 frac bits
-        int shift_amount = sum_k - 15;
+        logic [15:0] mantissa;
+        int shift_amount;
+        mantissa = (16'h8000 | sum_frac);  // leading 1 + 15 frac bits
+        shift_amount = sum_k - 15;
 
         if (shift_amount >= 0)
             result_mag = {16'b0, mantissa} << shift_amount;

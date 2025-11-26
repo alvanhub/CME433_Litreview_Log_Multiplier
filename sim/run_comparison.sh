@@ -1,7 +1,7 @@
 #!/bin/csh
 # Run comparison tests for all multiplier designs
 
-source /CMC/scripts/mentor.questasim.2020.1_1.csh
+# source /CMC/scripts/mentor.questasim.2020.1_1.csh
 
 echo "=========================================="
 echo "Multiplier Design Comparison"

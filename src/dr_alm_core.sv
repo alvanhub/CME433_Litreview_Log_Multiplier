@@ -45,6 +45,17 @@ module dr_alm_core #(
     assign k_a = get_lod(abs_a);
     assign k_b = get_lod(abs_b);
 
+
+    // lod16 lod_inst_a (
+    //     .data_in(abs_a),
+    //     .lead_one_pos(k_a)
+    // );
+
+    // lod16 lod_inst_b (
+    //     .data_in(abs_b),
+    //     .lead_one_pos(k_b)
+    // );
+
     // -------------------------------------------------------------------------
     // 3. Dynamic Truncation - Algorithm 1 Step 2 
     // -------------------------------------------------------------------------

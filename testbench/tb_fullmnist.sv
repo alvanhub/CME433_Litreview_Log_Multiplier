@@ -66,11 +66,38 @@ module tb_fullmnist;
   logic signed [31:0] acc32;
 
   // CHANGE THIS TO TEST DIFFERENT MULTIPLIERS
-  exact_16bit_mult mult (
-      .i_a(shifted_input),
-      .i_b(offset16),
-      .o_z(product32)
-  );
+  `ifdef EXACT_MULT
+    exact_16bit_mult mult (
+        .i_a(shifted_input),
+        .i_b(offset16),
+        .o_z(product32)
+    );
+  `endif
+
+  `ifdef LOG_MULT
+    base_log_mult mult (
+        .i_a(shifted_input),
+        .i_b(offset16),
+        .o_z(product32)
+    );
+  
+  `endif
+
+  `ifdef DR_ALM_CORE
+    dr_alm_core_16bit7trunc mult (
+        .i_a(shifted_input),
+        .i_b(offset16),
+        .o_z(product32)
+    );
+  `endif
+
+  `ifdef DR_ALM_IMPROVED
+    improved_dr_alm_16_7trunc mult (
+        .i_a(shifted_input),
+        .i_b(offset16),
+        .o_z(product32)
+    );
+  `endif
 
   initial begin
     if ($value$plusargs("V=%s", version)) begin
