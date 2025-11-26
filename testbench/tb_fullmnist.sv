@@ -65,7 +65,8 @@ module tb_fullmnist;
   logic signed [63:0] round;
   logic signed [31:0] acc32;
 
-  mult16bvia8bit mult (
+  // CHANGE THIS TO TEST DIFFERENT MULTIPLIERS
+  exact_16bit_mult mult (
       .i_a(shifted_input),
       .i_b(offset16),
       .o_z(product32)

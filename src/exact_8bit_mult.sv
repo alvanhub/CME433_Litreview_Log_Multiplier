@@ -1,4 +1,4 @@
-module exact_mult (
+module exact_8bit_mult (
     input  logic signed [ 7:0] i_a,
     input  logic signed [ 7:0] i_b,
     output logic signed [15:0] o_z
@@ -6,4 +6,4 @@ module exact_mult (
   always_comb begin
     o_z = i_a * i_b;
   end
-endmodule : exact_mult
+endmodule : exact_8bit_mult

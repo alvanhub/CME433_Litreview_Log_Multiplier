@@ -57,7 +57,7 @@ module dr_alm_core #(
     // The paper specifies taking the fractional parts x1, x2 and appending '1'
     // x1t <- {x1[n-2 .. n-t-1], 1'b1}
     logic [TRUNC_WIDTH-1:0] x_a_trunc, x_b_trunc;
-    
+
     // We extract TRUNC_WIDTH-1 bits after the MSB, then append 1.
     // (DWIDTH-2) is the bit immediately following the Leading One.
     assign x_a_trunc = {norm_a[(DWIDTH-2) -: (TRUNC_WIDTH-1)], 1'b1};
