@@ -66,7 +66,7 @@ module tb_fullmnist;
   logic signed [31:0] acc32;
 
   // CHANGE THIS TO TEST DIFFERENT MULTIPLIERS
-  `ifdef EXACT_MULT
+  `ifdef exact
     exact_16bit_mult mult (
         .i_a(shifted_input),
         .i_b(offset16),
@@ -107,7 +107,7 @@ module tb_fullmnist;
     end
     //last_layer_mode
     //MAKE SURE YOU RUN EXACT MULTIPLIER BEFORE RUNNING THE LAST LAYER MODE
-    last_layer_mode = 0;
+    last_layer_mode = 1;
 
     // initialization
     root_dir = "../";

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default multipliers to run if none provided
-DEFAULT_MULTIPLIERS=("EXACT_MULT" "LOG_MULT" "DR_ALM_CORE" "DR_ALM_IMPROVED")
+DEFAULT_MULTIPLIERS=("exact" "LOG_MULT" "DR_ALM_CORE" "DR_ALM_IMPROVED")
 
 # Check for arguments
 if [ $# -eq 0 ]; then
@@ -33,10 +33,10 @@ run_and_capture() {
 
     # Map type to name/version/module
     case $mult_type in
-        "EXACT_MULT")
+        "exact")
             mult_name="Exact Multiplier"
             mult_version="exact"
-            mult_module="dc_exact_16bit"
+            mult_module="exact_16bit_mult"
             ;;
         "LOG_MULT")
             mult_name="Base Log Mult"
@@ -67,69 +67,6 @@ run_and_capture() {
     echo "------------------------------------------------------------"
     echo "Processing: $mult_name ($mult_type)"
     echo "------------------------------------------------------------"
-
-    # 1. Switch Multiplier
-    # echo ">>> Switching to $mult_name..."
-    # cd src && bash switch_mult.sh "$mult_type" && cd .. || { echo "Failed to switch multiplier"; exit 1; }
-
-    # 2. Run Simulation
-    # echo ">>> Running simulation..."
-    # cd sim
-    # if [ "$mult_type" == "exact" ]; then
-    #     # Check if exact results exist
-    #     if [ ! -f "../results/multexact_0in_layer2_out.txt" ]; then
-    #          csh -c "source ./gen_exact_results.sh" > /dev/null 2>&1
-    #     else
-    #          echo "    Exact results already exist, skipping simulation."
-    #     fi
-    # else
-    #      csh -c "source ./run_tb.sh $mult_version" > /dev/null 2>&1
-    # fi
-    # cd ..
-
-    # # 3. Calculate Stats (Accuracy & Layer NMED)
-    # echo ">>> Calculating Accuracy and Layer NMED..."
-    # cd python
-    # local stats_output=$(python3 get_mnist_stats.py "$mult_version" 2>&1)
-    # cd ..
-    
-    # # Parse Accuracy
-    # local acc=$(echo "$stats_output" | grep "Acc:" | awk '{print $2}')
-    # ACCURACY[$mult_type]=$acc
-    
-    # # Parse Layer NMEDs
-    # local nmed0=$(echo "$stats_output" | grep "Layer 0 NMED:" | awk '{print $4}')
-    # local nmed1=$(echo "$stats_output" | grep "Layer 1 NMED:" | awk '{print $4}')
-    # local nmed2=$(echo "$stats_output" | grep "Layer 2 NMED:" | awk '{print $4}')
-    # NMED_L0[$mult_type]=$nmed0
-    # NMED_L1[$mult_type]=$nmed1
-    # NMED_L2[$mult_type]=$nmed2
-
-    # echo "    Accuracy: $acc"
-    # echo "    Layer 0 NMED: $nmed0"
-    # echo "    Layer 1 NMED: $nmed1"
-    # echo "    Layer 2 NMED: $nmed2"
-
-    # # 4. Calculate All-Input NMED
-    # echo ">>> Calculating All-Input NMED..."
-    # cd python
-    # local nmed_all="N/A"
-    
-    # if [ "$mult_type" == "exact" ]; then
-    #     nmed_all="0.000000"
-    # elif [ "$mult_type" == "base_log" ]; then
-    #      nmed_all=$(python3 -c "import sys; sys.path.insert(0, '.'); from check_mult_nmed import calculate_nmed_all; calculate_nmed_all()" 2>/dev/null | grep "NMED" | awk '{print $NF}')
-    # elif [ "$mult_type" == "dr_alm" ]; then
-    #      nmed_all=$(python3 check_mult_nmed.py 2>/dev/null | grep "NMED" | awk '{print $NF}')
-    # elif [ "$mult_type" == "improved" ]; then
-    #      nmed_all=$(python3 check_improved_nmed.py 2>/dev/null | grep "NMED" | awk '{print $NF}')
-    # else
-    #     # For custom multipliers, we don't have a python model ready
-    #     nmed_all="N/A"
-    # fi
-    # cd ..
-    # NMED_ALL[$mult_type]=$nmed_all
-    # echo "    All-Input NMED: $nmed_all"
 
     # 5. Run Synthesis & Capture Hardware Stats
     echo ">>> Running Synthesis..."
@@ -178,7 +115,10 @@ run_and_capture() {
     echo "    Stats Output:"
     echo "$stats_output"
     
-    ACCURACY[$mult_type]=$(echo "$stats_output" | grep "Accuracy:" | awk '{print $2}')
+    ACCURACY[$mult_type]=$(echo "$stats_output" | grep "Final Classification Accuracy" | grep -oP '\d+\.\d+' | head -1)
+    NMED_L0[$mult_type]=$(echo "$stats_output" | grep -E "^0\s+\|" | awk -F'|' '{print $4}' | xargs)
+    NMED_L1[$mult_type]=$(echo "$stats_output" | grep -E "^1\s+\|" | awk -F'|' '{print $4}' | xargs)
+    NMED_L2[$mult_type]=$(echo "$stats_output" | grep -E "^2\s+\|" | awk -F'|' '{print $4}' | xargs)
     cd ..
 }
 
@@ -201,14 +141,14 @@ done
 # done
 
 echo ""
-echo "===================================================================================================="
-echo "                                    HARDWARE METRICS SUMMARY                                        "
-echo "===================================================================================================="
+echo "=============================================================================================================================================="
+echo "                                                    HARDWARE METRICS SUMMARY                                                                  "
+echo "=============================================================================================================================================="
 echo ""
-printf "%-20s %-15s %-15s %-15s %-15s\n" "Multiplier" "Accuracy" "Area (μm²)" "Power (mW)" "Delay (ns)"
-printf "%-20s %-15s %-15s %-15s %-15s\n" "--------------------" "---------------" "---------------" "---------------" "---------------"
+printf "%-20s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "Multiplier" "Accuracy (%)" "L0 NMED (%)" "L1 NMED (%)" "L2 NMED (%)" "Area (μm²)" "Power (mW)" "Delay (ns)"
+printf "%-20s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "--------------------" "------------" "------------" "------------" "------------" "------------" "------------" "------------"
 
 for mult in "${MULTIPLIERS_TO_RUN[@]}"; do
-    printf "%-20s %-15s %-15s %-15s %-15s\n" "$mult" "${ACCURACY[$mult]}" "${AREA[$mult]}" "${POWER[$mult]}" "${DELAY[$mult]}"
+    printf "%-20s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "$mult" "${ACCURACY[$mult]}" "${NMED_L0[$mult]}" "${NMED_L1[$mult]}" "${NMED_L2[$mult]}" "${AREA[$mult]}" "${POWER[$mult]}" "${DELAY[$mult]}"
 done
 echo ""
