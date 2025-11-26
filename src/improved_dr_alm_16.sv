@@ -129,6 +129,8 @@ module improved_dr_alm_16 #(
   // Antilog (Mitchell)
   // ============================================================================
   logic [31:0] result_mag;
+  int shift_amt;
+  logic [14:0] mantissa;
 
   always_comb begin
     if (abs_a == 0 || abs_b == 0) begin
@@ -137,7 +139,7 @@ module improved_dr_alm_16 #(
     end else begin
       if (sum_frac_restored[14]) begin
         // mantissa >= 1.0
-        int shift_amt = (sum_k + 1) - 15;
+        shift_amt = (sum_k + 1) - 15;
 
         if (shift_amt >= 0)
             result_mag = {16'b0, sum_frac_restored} << shift_amt;
@@ -146,8 +148,8 @@ module improved_dr_alm_16 #(
 
       end else begin
         // mantissa < 1.0 → add implicit 1.0 (bit 14)
-        logic [14:0] mantissa = (15'h4000 | sum_frac_restored);
-        int shift_amt = sum_k - 15;
+        mantissa = (15'h4000 | sum_frac_restored);
+        shift_amt = sum_k - 15;
 
         if (shift_amt >= 0)
             result_mag = {16'b0, mantissa} << shift_amt;
