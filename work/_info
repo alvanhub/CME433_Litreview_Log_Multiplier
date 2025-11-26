@@ -1,0 +1,95 @@
+m255
+K4
+z2
+!s11f vlog 2020.1_1 2020.03, Mar  4 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/joz548/engr-ece/CME433LitReview/CME433_Litreview_Log_Multiplier
+T_opt
+!s110 1763874611
+V8jgAJm_g^=dN8W=f4zS^i3
+04 7 4 work tb_nmed fast 0
+=1-b07b25240ea9-69229733-c7e35-25569
+o-quiet -auto_acc_if_foreign -work work
+Z1 tCvgOpt 0
+n@_opt
+OL;O;2020.1_1;71
+vdr_alm_8bit
+Z2 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
+Z3 !s110 1763874610
+!i10b 1
+!s100 ;YD;lOGZ@onXEV2D7;?Y`0
+Z4 !s11b Dg1SIo80bB@j0V0VzS_@n1
+InbkzmNgCIa>24>ZgJ@aJz2
+Z5 VDg1SIo80bB@j0V0VzS_@n1
+S1
+R0
+Z6 w1763874003
+Z7 8src/dr_alm_8bit.sv
+Z8 Fsrc/dr_alm_8bit.sv
+!i122 0
+L0 6 92
+Z9 OL;L;2020.1_1;71
+r1
+!s85 0
+31
+Z10 !s108 1763874610.000000
+Z11 !s107 testbench/tb_nmed.sv|src/dr_alm_8bit.sv|
+Z12 !s90 -sv|src/dr_alm_8bit.sv|testbench/tb_nmed.sv|
+!i113 0
+Z13 o-sv -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+R1
+vdr_alm_8bit_signed
+R2
+R3
+!i10b 1
+!s100 V<HdjDeP3fPFX4EKVSQ2O0
+R4
+I7@8I4;R]Gbif=<l_SB0`B1
+R5
+S1
+R0
+R6
+R7
+R8
+!i122 0
+L0 100 38
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 0
+R13
+R1
+vtb_nmed
+R2
+R3
+!i10b 1
+!s100 P?hNR4UINbzAb`Kld]z?`1
+R4
+IJ0N7RK]f2e7jF>njA]Y330
+R5
+S1
+R0
+w1763874018
+8testbench/tb_nmed.sv
+Ftestbench/tb_nmed.sv
+!i122 0
+L0 6 119
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 0
+R13
+R1

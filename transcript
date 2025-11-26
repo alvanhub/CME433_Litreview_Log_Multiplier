@@ -1,0 +1,11 @@
+# vsim -c -do "run -all; quit" tb_fullmnist "+MULT_VERSION=approx" 
+# Start time: 12:25:21 on Nov 25,2025
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Error: (vopt-13130) Failed to find design unit tb_fullmnist.
+#         Searched libraries:
+#             work
+# Optimization failed
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=1, Warnings=0.
+# Error loading design
+# End time: 12:25:22 on Nov 25,2025, Elapsed time: 0:00:01
+# Errors: 1, Warnings: 0

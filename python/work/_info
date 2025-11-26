@@ -1,0 +1,162 @@
+m255
+K4
+z2
+!s11f vlog 2020.1_1 2020.03, Mar  4 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/joz548/engr-ece/CME433LitReview/CME433_Litreview_Log_Multiplier/python
+vdr_alm_8bit
+Z1 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
+Z2 !s110 1763840192
+!i10b 1
+!s100 OkQX`<4TFa=gP6;SXAXTm1
+Z3 !s11b Dg1SIo80bB@j0V0VzS_@n1
+IeL9577_D1elUgGL`;]Q4=1
+Z4 VDg1SIo80bB@j0V0VzS_@n1
+S1
+R0
+Z5 w1763839740
+Z6 8../src/dr_alm_8bit.sv
+Z7 F../src/dr_alm_8bit.sv
+!i122 0
+L0 6 93
+Z8 OL;L;2020.1_1;71
+r1
+!s85 0
+31
+Z9 !s108 1763840191.000000
+Z10 !s107 ../src/mult16via8.sv|../src/exact_mult.sv|../src/dr_alm_8bit.sv|
+Z11 !s90 ../src/dr_alm_8bit.sv|../src/exact_mult.sv|../src/mult16via8.sv|
+!i113 0
+Z12 o-L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+Z13 tCvgOpt 0
+vdr_alm_8bit_signed
+R1
+R2
+!i10b 1
+!s100 kMA;CkNYQoFJVV;SF6CS^0
+R3
+I;9EbFVIG@JQXb[SZ3:U<V3
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 0
+L0 101 38
+R8
+r1
+!s85 0
+31
+R9
+R10
+R11
+!i113 0
+R12
+R13
+vexact_mult
+R1
+R2
+!i10b 1
+!s100 e4VHLVER7XDgWV3ZU?VNa3
+R3
+IRWQLM_LTI8;X23IA>]J<V3
+R4
+S1
+R0
+Z14 w1763577906
+8../src/exact_mult.sv
+F../src/exact_mult.sv
+!i122 0
+L0 1 9
+R8
+r1
+!s85 0
+31
+R9
+R10
+R11
+!i113 0
+R12
+R13
+vmult16bvia8bit
+R1
+R2
+!i10b 1
+!s100 0Xo@L<O_n<8<I78APc@fe0
+R3
+I8=aFeNUl50XgaZGl=_l[Q1
+R4
+S1
+R0
+w1763840140
+8../src/mult16via8.sv
+F../src/mult16via8.sv
+!i122 0
+L0 1 47
+R8
+r1
+!s85 0
+31
+R9
+R10
+R11
+!i113 0
+R12
+R13
+vtb_fullmnist
+R1
+DXx4 work 20 tb_fullmnist_sv_unit 0 22 gPGa9^6_c=Kd]<:b1E5J<1
+R2
+R4
+r1
+!s85 0
+!i10b 1
+!s100 AJ9UZUAVYPC_E;PQPbf@A1
+I9:faZ8i<IV=8fn90Q4;YC2
+!s105 tb_fullmnist_sv_unit
+S1
+R0
+R14
+Z15 8../testbench/tb_fullmnist.sv
+Z16 F../testbench/tb_fullmnist.sv
+!i122 1
+L0 11 229
+R8
+31
+Z17 !s108 1763840192.000000
+!s107 ../testbench/tb_fullmnist.sv|
+Z18 !s90 ../testbench/tb_fullmnist.sv|
+!i113 0
+R12
+R13
+Xtb_fullmnist_sv_unit
+R1
+R2
+VgPGa9^6_c=Kd]<:b1E5J<1
+r1
+!s85 0
+!i10b 1
+!s100 zS=3B9^;:[99U;2_LBo9N3
+IgPGa9^6_c=Kd]<:b1E5J<1
+!i103 1
+S1
+R0
+R14
+R15
+R16
+!i122 1
+L0 1 0
+R8
+31
+R17
+Z19 !s107 ../testbench/tb_fullmnist.sv|
+R18
+!i113 0
+R12
+R13
