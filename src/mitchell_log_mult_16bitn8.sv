@@ -5,7 +5,7 @@ module mitchell_log_mult_16bitn8 (
 );
 
 // instansiate the core module
-mitchell_log_mult_core#(.W(8), .N(16)) u_mitchell_log_mult_core (
+mitchell_log_mult_core #(.W(8), .N(16)) u_mitchell_log_mult_core (
     .i_a(i_a),
     .i_b(i_b),
     .o_z(o_z)

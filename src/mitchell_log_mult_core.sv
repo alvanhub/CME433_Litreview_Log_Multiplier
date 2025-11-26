@@ -3,13 +3,26 @@ module mitchell_log_mult_core #(parameter W = 8, parameter N = 16)(
     input  logic [15:0] i_b,
     output logic [31:0] o_z
 );
-
-    logic [15:0] m_a, m_b;
-    logic [15:0] m;
+    logic [31:0] m;
     logic [4:0] k_a, k_b;
-    logic [4:0] k;
-    logic [4:0] shamt_l, shamt_r;
-    logic [31:0] result;
+    logic [4:0] h_a, h_b;
+    logic [15:0] x_a, x_b;
+    logic [W+$clog2(N):0] op1, op2;
+    logic [W+$clog2(N):0] L;
+    logic [$clog2(N):0] charac;
+    logic [31:0] D;
+    
+    logic [15:0] abs_a, abs_b;
+    logic sign_a, sign_b, sign_z;
+    logic [31:0] result_abs;
+
+    // Handle signed inputs
+    assign sign_a = i_a[15];
+    assign sign_b = i_b[15];
+    assign sign_z = sign_a ^ sign_b;
+    
+    assign abs_a = sign_a ? (~i_a + 1'b1) : i_a;
+    assign abs_b = sign_b ? (~i_b + 1'b1) : i_b;
 
     function automatic [4:0] find_leading_one(input logic [15:0] data);
         casez (data)
@@ -32,37 +45,33 @@ module mitchell_log_mult_core #(parameter W = 8, parameter N = 16)(
             default:              find_leading_one = 5'd0;
         endcase
     endfunction
-    // Get the leading one of i_a and i_b
-    assign h_a = find_leading_one(i_a);
-    assign h_b = find_leading_one(i_b);
-
-    k_a = h_a - N - 1;
-    k_b = h_b - N - 1;
-
-    x_a = i_a << (N - k_a - 1);
-    x_b = i_b << (N - k_b - 1);
-
-    op1 = {1'b0, k_a, x_a[N-2:N-W]};
-    op2 = {1'b0, k_b, x_b[N-2:N-W]};
-
-    L = op1 + op2;
-
-    charac = L[W+log2(N)-1:W-1];
-    lr = charac[log2(N)];
     
-    m = {1'b1, L[W-2:0]}
+    // Get the leading one of absolute values
+    assign h_a = find_leading_one(abs_a);
+    assign h_b = find_leading_one(abs_b);
 
-    if lr == 1'b1 then
-        shmamtL = {1'b0, charac[log2(N)-1:0]} + 1'b1;
-        D = m << shamtL;
-    else
-        shamtR = n - charac[log2(N)-1:0] - 1'b1;
-        D = m >> shamtR[log2(N):log2(N)-log2(W)];
+    assign k_a = h_a;
+    assign k_b = h_b;
 
-    if i_a == 0 | i_b == 0 then
-        o_z = 32'd0;
-    else
-        o_z = D;
+    assign x_a = abs_a << (N - k_a - 1);
+    assign x_b = abs_b << (N - k_b - 1);
 
+    assign op1 = {1'b0, k_a, x_a[N-2:N-W]};
+    assign op2 = {1'b0, k_b, x_b[N-2:N-W]};
+
+    assign L = op1 + op2;
+
+    assign charac = L[W+$clog2(N)-1:W-1];
+    
+    assign m = {1'b1, L[W-2:0]}; // Reconstruct mantissa (1.fraction)
+
+    // Shift amount calculation: shift = charac - (W-1)
+    // W=8, W-1=7
+    assign D = (charac >= (W-1)) ? (m << (charac - (W-1))) : (m >> ((W-1) - charac));
+
+    assign result_abs = ((abs_a == 0) || (abs_b == 0)) ? 32'd0 : D;
+    
+    // Restore sign
+    assign o_z = sign_z ? (~result_abs + 1'b1) : result_abs;
     
 endmodule
