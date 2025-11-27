@@ -2,13 +2,14 @@
 // Implements Algorithm 1 and Figure 2 from the paper.
 
 module dr_alm_core #(
-    parameter integer WIDTH = 16,      // Data Width (8 or 16)
-    parameter integer KEEP_WIDTH = 5   // 't' in the paper. t=6 is best tradeoff [cite: 320]
+    parameter integer WIDTH = 16,
+    parameter KEEP_WIDTH = 7
 )(
     input  logic signed [WIDTH-1:0] i_a,
     input  logic signed [WIDTH-1:0] i_b,
     output logic signed [(2*WIDTH)-1:0] o_z
 );
+    localparam integer TRUNC_WIDTH = KEEP_WIDTH;
 
     logic sign_a, sign_b, sign_z;
     logic [WIDTH-1:0] abs_a, abs_b;

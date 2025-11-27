@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default multipliers to run if none provided
-DEFAULT_MULTIPLIERS=("exact" "LOG_MULT" "DR_ALM_CORE" "DR_ALM_IMPROVED" "DR_ALM_IMPROVED_MSB" "MITCHELL_LOG_MULT")
+DEFAULT_MULTIPLIERS=("exact" "base_log_mult" "dr_alm_core" "improved_dr_alm_16_approx_lod" "mitchell_log_mult_core")
 
 # Check for arguments
 if [ $# -eq 0 ]; then
@@ -27,55 +27,32 @@ declare -A DELAY
 # Function to run simulation and capture stats
 run_and_capture() {
     local mult_type=$1
-    local mult_name=""
-    local mult_version=""
-    local mult_module=""
+    local mult_module=$1
+    local keep_width=7
+    local saved_keep_width=7
+    local should_replace_keep_width=true
 
-    # Map type to name/version/module
-    case $mult_type in
-        "exact")
-            mult_name="Exact Multiplier"
-            mult_version="exact"
-            mult_module="exact_16bit_mult"
-            ;;
-        "LOG_MULT")
-            mult_name="Base Log Mult"
-            mult_version="base_log"
-            mult_module="base_log_mult"
-            ;;
-        "DR_ALM_CORE")
-            mult_name="DR ALM"
-            mult_version="dr_alm_core"
-            mult_module="dr_alm_core"
-            ;;
-        "DR_ALM_IMPROVED")
-            mult_name="Improved DR ALM"
-            mult_version="improved"
-            mult_module="improved_dr_alm_16_approx_lod"
-            ;;
-        "DR_ALM_IMPROVED_MSB")
-            mult_name="Improved DR ALM (MSB)"
-            mult_version="improved_msb"
-            mult_module="improved_MSB_dr_alm"
-            ;;
-        "MITCHELL_LOG_MULT")
-            mult_name="Mitchell Log Mult"
-            mult_version="mitchell_log_mult"
-            mult_module="mitchell_log_mult_core"
-            ;;
-        *)
-            # Custom multiplier
-            mult_name="$mult_type"
-            mult_version="$mult_type"
-            # For custom types, we assume the module name is the same as the type
-            # or handled by switch_mult.sh logic we just added
-            mult_module="$mult_type"
-            ;;
-    esac
+    # change mult_version for exact
+    if [ "$mult_type" == "exact" ]; then
+        mult_module="exact_16bit_mult"
+    fi
+
+    # Don't replace KEEP_WIDTH for exact multiplier and base_log_mult
+    if [ "$mult_type" == "exact" ] || [ "$mult_type" == "base_log_mult" ]; then
+        should_replace_keep_width=false
+    fi
+
+    # Find KEEP_WIDTH parameter value in source file and replace its value in the
+    # source file to keep_width so that the dc_compiler and simulation use the same parameter
+    if [ "$should_replace_keep_width" = true ]; then
+        saved_keep_width=$(grep -oP 'parameter KEEP_WIDTH = \K[0-9]+' ./src/${mult_module}.sv)
+        sed -i "s/parameter KEEP_WIDTH = [0-9]\+/parameter KEEP_WIDTH = $keep_width/" ./src/${mult_module}.sv
+        echo "    Changed KEEP_WIDTH from $saved_keep_width to $keep_width in ./src/${mult_module}.sv"
+    fi
 
     echo ""
     echo "------------------------------------------------------------"
-    echo "Processing: $mult_name ($mult_type)"
+    echo "Processing: ($mult_type)"
     echo "------------------------------------------------------------"
 
     # 5. Run Synthesis & Capture Hardware Stats
@@ -129,7 +106,12 @@ run_and_capture() {
     NMED_L0[$mult_type]=$(echo "$stats_output" | grep -E "^0\s+\|" | awk -F'|' '{print $4}' | xargs)
     NMED_L1[$mult_type]=$(echo "$stats_output" | grep -E "^1\s+\|" | awk -F'|' '{print $4}' | xargs)
     NMED_L2[$mult_type]=$(echo "$stats_output" | grep -E "^2\s+\|" | awk -F'|' '{print $4}' | xargs)
+
     cd ..
+    # Restore original KEEP_WIDTH value in source file
+    if [ "$should_replace_keep_width" = true ]; then
+        sed -i "s/parameter KEEP_WIDTH = $keep_width/parameter KEEP_WIDTH = $saved_keep_width/" ./src/${mult_module}.sv
+    fi
 }
 
 # Main Loop
@@ -155,10 +137,10 @@ echo "==========================================================================
 echo "                                                    HARDWARE METRICS SUMMARY                                                                  "
 echo "=============================================================================================================================================="
 echo ""
-printf "%-20s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "Multiplier" "Accuracy (%)" "L0 NMED (%)" "L1 NMED (%)" "L2 NMED (%)" "Area (μm²)" "Power (mW)" "Delay (ns)"
-printf "%-20s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "--------------------" "------------" "------------" "------------" "------------" "------------" "------------" "------------"
+printf "%-35s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "Multiplier" "Accuracy (%)" "L0 NMED (%)" "L1 NMED (%)" "L2 NMED (%)" "Area (μm²)" "Power (mW)" "Delay (ns)"
+printf "%-35s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "-----------------------------------" "------------" "------------" "------------" "------------" "------------" "------------" "------------"
 
 for mult in "${MULTIPLIERS_TO_RUN[@]}"; do
-    printf "%-20s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "$mult" "${ACCURACY[$mult]}" "${NMED_L0[$mult]}" "${NMED_L1[$mult]}" "${NMED_L2[$mult]}" "${AREA[$mult]}" "${POWER[$mult]}" "${DELAY[$mult]}"
+    printf "%-35s %-12s %-12s %-12s %-12s %-12s %-12s %-12s\n" "$mult" "${ACCURACY[$mult]}" "${NMED_L0[$mult]}" "${NMED_L1[$mult]}" "${NMED_L2[$mult]}" "${AREA[$mult]}" "${POWER[$mult]}" "${DELAY[$mult]}"
 done
 echo ""

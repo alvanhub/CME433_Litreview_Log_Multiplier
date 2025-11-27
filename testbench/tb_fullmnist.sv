@@ -65,6 +65,8 @@ module tb_fullmnist;
   logic signed [63:0] round;
   logic signed [31:0] acc32;
 
+  // localparam KEEP_WIDTH_IN = `KEEP_WIDTH;
+
   // CHANGE THIS TO TEST DIFFERENT MULTIPLIERS
   `ifdef exact
     exact_16bit_mult mult (
@@ -74,7 +76,7 @@ module tb_fullmnist;
     );
   `endif
 
-  `ifdef LOG_MULT
+  `ifdef base_log_mult
     base_log_mult mult (
         .i_a(shifted_input),
         .i_b(offset16),
@@ -83,7 +85,7 @@ module tb_fullmnist;
   
   `endif
 
-  `ifdef DR_ALM_CORE
+  `ifdef dr_alm_core
     dr_alm_core mult (
         .i_a(shifted_input),
         .i_b(offset16),
@@ -91,15 +93,7 @@ module tb_fullmnist;
     );
   `endif
 
-  `ifdef DR_ALM_IMPROVED_MSB
-    improved_MSB_dr_alm_core mult (
-        .i_a(shifted_input),
-        .i_b(offset16),
-        .o_z(product32)
-    );
-  `endif
-
-  `ifdef DR_ALM_IMPROVED
+  `ifdef improved_dr_alm_16_approx_lod
     improved_dr_alm_16_approx_lod mult (
         .i_a(shifted_input),
         .i_b(offset16),
@@ -107,7 +101,7 @@ module tb_fullmnist;
     );
   `endif
 
-  `ifdef MITCHELL_LOG_MULT
+  `ifdef mitchell_log_mult_core
     mitchell_log_mult_core mult (
       .i_a(shifted_input),
       .i_b(offset16),

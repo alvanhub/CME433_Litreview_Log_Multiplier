@@ -1,11 +1,12 @@
 module improved_dr_alm_16_approx_lod #(
-    parameter M_WIDTH = 5     // number of kept mantissa bits (<= 15)
+    parameter KEEP_WIDTH = 7
 ) (
     input  logic signed [15:0] i_a,
     input  logic signed [15:0] i_b,
     output logic signed [31:0] o_z
 );
 
+  localparam integer M_WIDTH = KEEP_WIDTH;
   // ============================================================================
   // Sign and Absolute Value
   // ============================================================================
