@@ -93,7 +93,7 @@ run_and_capture() {
     cd ..
 
     cd sim
-    /bin/csh ./run_tb.sh $mult_type 2>&1 | tee sim_output.txt 
+    /bin/csh ./run_tb.sh $mult_type 2>&1 # | tee sim_output.txt 
 
     # Flag errors
     # local error_count=$(grep "Errors:" sim_output.txt | awk '{print $2}')
