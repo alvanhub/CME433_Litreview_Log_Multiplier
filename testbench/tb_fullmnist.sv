@@ -84,7 +84,15 @@ module tb_fullmnist;
   `endif
 
   `ifdef DR_ALM_CORE
-    dr_alm_core #(.WIDTH(16), .KEEP_WIDTH(7)) mult (
+    dr_alm_core mult (
+        .i_a(shifted_input),
+        .i_b(offset16),
+        .o_z(product32)
+    );
+  `endif
+
+  `ifdef DR_ALM_IMPROVED_MSB
+    improved_MSB_dr_alm_core mult (
         .i_a(shifted_input),
         .i_b(offset16),
         .o_z(product32)
@@ -92,7 +100,7 @@ module tb_fullmnist;
   `endif
 
   `ifdef DR_ALM_IMPROVED
-    improved_dr_alm_16_7trunc mult (
+    improved_dr_alm_16_approx_lod mult (
         .i_a(shifted_input),
         .i_b(offset16),
         .o_z(product32)

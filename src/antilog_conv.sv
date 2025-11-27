@@ -1,6 +1,6 @@
 module antilog_conv #(
     parameter integer WIDTH = 16,      // Data Width (8 or 16)
-    parameter integer KEEP_WIDTH = 6   // 't' in the paper. t=6 is best tradeoff [cite: 320]
+    parameter integer KEEP_WIDTH = 5   // 't' in the paper. t=6 is best tradeoff [cite: 320]
 )(
     input logic [$clog2(WIDTH):0] sum_k,
     input logic [KEEP_WIDTH:0] sum_x,

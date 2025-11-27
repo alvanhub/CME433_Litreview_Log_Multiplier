@@ -1,8 +1,8 @@
 // Modified: Uses actual bit extraction for the LSB of the truncated significand instead of '1'.
 
-module improved_MSB_dr_alm_core #(
+module improved_MSB_dr_alm #(
     parameter integer WIDTH = 16,      // Data Width (8 or 16)
-    parameter integer KEEP_WIDTH = 6   // 't' in the paper. t=6 is best tradeoff
+    parameter integer KEEP_WIDTH = 5   // 't' in the paper. t=6 is best tradeoff
 )(
     input  logic signed [WIDTH-1:0] i_a,
     input  logic signed [WIDTH-1:0] i_b,
@@ -23,25 +23,26 @@ module improved_MSB_dr_alm_core #(
     assign abs_a = sign_a ? -i_a : i_a;
     assign abs_b = sign_b ? -i_b : i_b;
 
-    // -------------------------------------------------------------------------
-    // 2. Leading One Detector (LOD) - Algorithm 1 Step 1 
-    // -------------------------------------------------------------------------
-    logic [$clog2(WIDTH)-1:0] k_a, k_b;
+    // ============================================================================
+    // Leading One Detector (log2 characteristic)
+    // ============================================================================
+    logic [4:0] k_a, k_b;
+    logic [3:0] k_a_raw, k_b_raw;
 
-    // Helper function to find the Most Significant Bit (MSB) location
-    function automatic [$clog2(WIDTH)-1:0] get_lod(input [WIDTH-1:0] val);
-        int i;
-        get_lod = 0;
-        for (i = WIDTH-1; i >= 0; i = i - 1) begin
-            if (val[i]) begin
-                get_lod = i[$clog2(WIDTH)-1:0];
-                break;
-            end
-        end
-    endfunction
+    // Instantiate the hierarchical LOD for each input
+    hierarchical_lod_16bit lod_a (
+        .a (abs_a),
+        .k (k_a_raw)
+    );
 
-    assign k_a = get_lod(abs_a);
-    assign k_b = get_lod(abs_b);
+    hierarchical_lod_16bit lod_b (
+        .a (abs_b),
+        .k (k_b_raw)
+    );
+    
+    // Assign 4-bit LOD output to 5-bit characteristic value
+    assign k_a = {1'b0, k_a_raw};
+    assign k_b = {1'b0, k_b_raw};
 
     // -------------------------------------------------------------------------
     // 3. Dynamic Truncation - Algorithm 1 Step 2 (IMPROVED)

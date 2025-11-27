@@ -1,5 +1,5 @@
 module improved_dr_alm_16_approx_lod #(
-    parameter M_WIDTH = 10     // number of kept mantissa bits (<= 15)
+    parameter M_WIDTH = 5     // number of kept mantissa bits (<= 15)
 ) (
     input  logic signed [15:0] i_a,
     input  logic signed [15:0] i_b,

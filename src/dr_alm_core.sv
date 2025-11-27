@@ -3,7 +3,7 @@
 
 module dr_alm_core #(
     parameter integer WIDTH = 16,      // Data Width (8 or 16)
-    parameter integer KEEP_WIDTH = 6   // 't' in the paper. t=6 is best tradeoff [cite: 320]
+    parameter integer KEEP_WIDTH = 5   // 't' in the paper. t=6 is best tradeoff [cite: 320]
 )(
     input  logic signed [WIDTH-1:0] i_a,
     input  logic signed [WIDTH-1:0] i_b,
