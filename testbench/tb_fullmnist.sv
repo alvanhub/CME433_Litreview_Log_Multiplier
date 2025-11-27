@@ -93,12 +93,20 @@ module tb_fullmnist;
     );
   `endif
 
-  `ifdef improved_dr_alm_16_approx_lod
-    improved_dr_alm_16_approx_lod mult (
+  `ifdef dr_alm_round
+     dr_alm_round mult (
         .i_a(shifted_input),
         .i_b(offset16),
         .o_z(product32)
     );
+  `endif
+
+  `ifdef dr_alm_round_and_est
+    dr_alm_round_and_est mult (
+      .i_a(shifted_input),
+      .i_b(offset16),
+      .o_z(product32)
+  );
   `endif
 
   `ifdef mitchell_log_mult_core

@@ -1,5 +1,5 @@
 // Modified: Uses actual bit extraction for the LSB of the truncated significand instead of '1'.
-
+// UNUSED
 module improved_MSB_dr_alm #(
     parameter integer WIDTH = 16,      // Data Width (8 or 16)
     parameter integer KEEP_WIDTH = 5   // 't' in the paper. t=6 is best tradeoff

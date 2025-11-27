@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default multipliers to run if none provided
-DEFAULT_MULTIPLIERS=("exact" "base_log_mult" "dr_alm_core" "improved_dr_alm_16_approx_lod" "mitchell_log_mult_core")
+DEFAULT_MULTIPLIERS=("exact" "base_log_mult" "dr_alm_core" "dr_alm_round" "dr_alm_round_and_est" "mitchell_log_mult_core")
 
 # Check for arguments
 if [ $# -eq 0 ]; then
@@ -120,8 +120,8 @@ run_and_capture() {
 }
 
 # Main Loop
-start_keep_width=7
-end_keep_width=5
+start_keep_width=8
+end_keep_width=2
 for mult in "${MULTIPLIERS_TO_RUN[@]}"; do
     if [ "$mult" == "exact" ] || [ "$mult" == "base_log_mult" ]; then
         run_and_capture "$mult" 0
