@@ -48,110 +48,76 @@ module improved_dr_alm_16_approx_lod #(
   assign norm_b = abs_b << (15 - k_b);
 
   // ============================================================================
-  // Extract 15-bit Fractional Mantissa
+  // Extract fractional part
   // ============================================================================
   logic [14:0] frac_a, frac_b;
-
   assign frac_a = norm_a[14:0];
   assign frac_b = norm_b[14:0];
 
   // ============================================================================
-  // Truncation (keep upper M_WIDTH bits of 15-bit mantissa)
+  // Truncation - Following paper's approach (Alg 1 Step 2)
   // ============================================================================
-  logic [M_WIDTH-1:0] frac_a_trunc, frac_b_trunc;
-  assign frac_a_trunc = frac_a[14 : 15-M_WIDTH];
-  assign frac_b_trunc = frac_b[14 : 15-M_WIDTH];
-
-  // ============================================================================
-  // Truncated remainder (used for error compensation)
-  // ============================================================================
-  localparam REM_WIDTH = 15 - M_WIDTH;
-
+  logic [M_WIDTH-1:0] x_a_trunc, x_b_trunc;
+  
+  assign x_a_trunc = {frac_a[14 -: (M_WIDTH-1)], 1'b1};
+  assign x_b_trunc = {frac_b[14 -: (M_WIDTH-1)], 1'b1};
+  
+  localparam REM_WIDTH = 15 - (M_WIDTH-1);
   logic [REM_WIDTH-1:0] trunc_a, trunc_b;
-
   assign trunc_a = frac_a[REM_WIDTH-1:0];
   assign trunc_b = frac_b[REM_WIDTH-1:0];
 
   // ============================================================================
-  // Error Compensation Logic (scaled up from 7-bit version)
+  // Adaptive Compensation
   // ============================================================================
   logic [M_WIDTH:0] compensation;
+  logic [REM_WIDTH:0] sum_trunc;
+  logic [REM_WIDTH:0] threshold;
 
   always_comb begin
-    if (REM_WIDTH > 0) begin
-      logic apply_compensation;
-      apply_compensation = (k_a >= 3) && (k_b >= 3);
-
-      if (apply_compensation) begin
-        logic [REM_WIDTH:0] sum_trunc;
-        sum_trunc = {1'b0, trunc_a} + {1'b0, trunc_b};
-
-        // same 75% rule
-        if (sum_trunc >= ((sum_trunc >> 1) + (sum_trunc >> 2)))
-          compensation = 1;
-        else
-          compensation = 0;
-
-      end else begin
-        compensation = 0;
-      end
-    end else begin
-      compensation = 0;
+    compensation = 1; // Base compensation
+    
+    // Optional adaptive for large magnitudes
+    if (REM_WIDTH > 2 && (k_a >= 5) && (k_b >= 5)) begin
+      sum_trunc = {1'b0, trunc_a} + {1'b0, trunc_b};
+      
+      threshold = (7 * (1 << REM_WIDTH)) >> 3;
+      if (sum_trunc >= threshold)
+        compensation = compensation + 1;
     end
   end
 
-  // ============================================================================
+ // ============================================================================
   // Add characteristics + truncated mantissas
   // ============================================================================
   logic [5:0] sum_k;
-  logic [M_WIDTH:0] sum_frac_trunc;
+  logic [M_WIDTH:0] sum_x;
 
   assign sum_k = k_a + k_b;
-  assign sum_frac_trunc =
-        {1'b0, frac_a_trunc} +
-        {1'b0, frac_b_trunc} +
-        compensation;
+  assign sum_x = x_a_trunc + x_b_trunc + compensation;
 
   // ============================================================================
-  // Restore to full 15-bit mantissa width for Mitchell's antilog
+  // Antilog - Following paper's approach
   // ============================================================================
-  logic [14:0] sum_frac_restored;
-
-  assign sum_frac_restored =
-      {sum_frac_trunc, {REM_WIDTH{1'b0}}};  // pad LSBs
-
-  // ============================================================================
-  // Antilog (Mitchell)
-  // ============================================================================
+  logic carry_x;
+  logic [5:0] final_k;
+  logic [M_WIDTH-1:0] final_x;
+  logic [31:0] mantissa_reconst;
   logic [31:0] result_mag;
-  int shift_amt;
-  logic [14:0] mantissa;
+
+  assign carry_x = sum_x[M_WIDTH];
+  assign final_k = sum_k + carry_x;
+  assign final_x = sum_x[M_WIDTH-1:0];
+  assign mantissa_reconst = {1'b1, final_x};
 
   always_comb begin
     if (abs_a == 0 || abs_b == 0) begin
       result_mag = 0;
-
     end else begin
-      
-      if (sum_frac_restored[14]) begin
-        // mantissa >= 1.0
-        shift_amt = (sum_k + 1) - 15;
-
-        if (shift_amt >= 0)
-            result_mag = {16'b0, sum_frac_restored} << shift_amt;
-        else
-            result_mag = {16'b0, sum_frac_restored} >> -shift_amt;
-
-      end else begin
-        // mantissa < 1.0 → add implicit 1.0 (bit 14)
-        mantissa = (15'h4000 | sum_frac_restored);
-        shift_amt = sum_k - 15;
-
-        if (shift_amt >= 0)
-            result_mag = {16'b0, mantissa} << shift_amt;
-        else
-            result_mag = {16'b0, mantissa} >> -shift_amt;
-      end
+      if (final_k >= M_WIDTH)
+        result_mag = mantissa_reconst << (final_k - M_WIDTH);
+      else
+        result_mag = mantissa_reconst >> (M_WIDTH - final_k);
     end
   end
 

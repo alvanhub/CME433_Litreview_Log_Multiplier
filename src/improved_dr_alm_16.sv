@@ -22,7 +22,8 @@ module improved_dr_alm_16 #(
   // ============================================================================
   // Leading One Detector (log2 characteristic)
   // ============================================================================
-  function automatic [4:0] get_k(input logic [15:0] val);
+  function automatic [3:0] get_k(input logic [15:0] val);
+    // Return type changed to [3:0] as it's sufficient for 0-15
     if (val[15]) return 15;
     if (val[14]) return 14;
     if (val[13]) return 13;
@@ -41,124 +42,92 @@ module improved_dr_alm_16 #(
     return 0;
   endfunction
 
-  logic [4:0] k_a, k_b;
+  logic [4:0] k_a, k_b; // [4:0] is fine to avoid overflow in sum_k
   assign k_a = get_k(abs_a);
   assign k_b = get_k(abs_b);
 
   // ============================================================================
-  // Normalize Inputs
+  // Normalize Inputs & Extract Mantissa
   // ============================================================================
   logic [15:0] norm_a, norm_b;
-  assign norm_a = abs_a << (15 - k_a);
-  assign norm_b = abs_b << (15 - k_b);
-
-  // ============================================================================
-  // Extract 15-bit Fractional Mantissa
-  // ============================================================================
   logic [14:0] frac_a, frac_b;
 
+  assign norm_a = abs_a << (15 - k_a);
+  assign norm_b = abs_b << (15 - k_b);
   assign frac_a = norm_a[14:0];
   assign frac_b = norm_b[14:0];
 
   // ============================================================================
-  // Truncation (keep upper M_WIDTH bits of 15-bit mantissa)
+  // Truncation - Following paper's approach (Alg 1 Step 2)
   // ============================================================================
-  logic [M_WIDTH-1:0] frac_a_trunc, frac_b_trunc;
-  assign frac_a_trunc = frac_a[14 : 15-M_WIDTH];
-  assign frac_b_trunc = frac_b[14 : 15-M_WIDTH];
-
-  // ============================================================================
-  // Truncated remainder (used for error compensation)
-  // ============================================================================
-  localparam REM_WIDTH = 15 - M_WIDTH;
-
+  // Extract M_WIDTH-1 bits and append 1'b1 (implicit leading 1)
+  // This matches: x_trunc <- {norm[(DWIDTH-2) -: (M_WIDTH-1)], 1'b1}
+  logic [M_WIDTH-1:0] x_a_trunc, x_b_trunc;
+  
+  assign x_a_trunc = {frac_a[14 -: (M_WIDTH-1)], 1'b1};
+  assign x_b_trunc = {frac_b[14 -: (M_WIDTH-1)], 1'b1};
+  
+  // Store remainder for adaptive compensation
+  localparam REM_WIDTH = 15 - (M_WIDTH-1); // Remaining fraction bits
   logic [REM_WIDTH-1:0] trunc_a, trunc_b;
-
   assign trunc_a = frac_a[REM_WIDTH-1:0];
   assign trunc_b = frac_b[REM_WIDTH-1:0];
 
   // ============================================================================
-  // Error Compensation Logic (scaled up from 7-bit version)
+  // Adaptive Compensation Logic (improved over paper's constant +1)
   // ============================================================================
   logic [M_WIDTH:0] compensation;
+  logic [REM_WIDTH:0] sum_trunc;
+  logic [REM_WIDTH:0] threshold;
 
   always_comb begin
-    if (REM_WIDTH > 0) begin
-      logic apply_compensation;
-      apply_compensation = (k_a >= 3) && (k_b >= 3);
-
-      if (apply_compensation) begin
-        logic [REM_WIDTH:0] sum_trunc;
-        sum_trunc = {1'b0, trunc_a} + {1'b0, trunc_b};
-
-        // same 75% rule
-        if (sum_trunc >= ((sum_trunc >> 1) + (sum_trunc >> 2)))
-          compensation = 1;
-        else
-          compensation = 0;
-
-      end else begin
-        compensation = 0;
-      end
-    end else begin
-      compensation = 0;
+    // Base compensation (paper uses constant +1)
+    compensation = 1;
+    
+    // Adaptive: Only add extra compensation for large-magnitude multiplications
+    // where truncation error is significant
+    if (REM_WIDTH > 2 && (k_a >= 5) && (k_b >= 5)) begin
+      sum_trunc = {1'b0, trunc_a} + {1'b0, trunc_b};      
+      // Add +1 if truncated sum shows significant rounding error (>= 87.5%)
+      // 87.5% = 7/8 = more conservative than 75%
+      threshold = (7 * (1 << REM_WIDTH)) >> 3; // 87.5%
+      if (sum_trunc >= threshold)
+        compensation = compensation + 1;
     end
   end
 
   // ============================================================================
-  // Add characteristics + truncated mantissas
+  // Add characteristics + truncated mantissas (Alg 1 Step 3 & 4)
   // ============================================================================
   logic [5:0] sum_k;
-  logic [M_WIDTH:0] sum_frac_trunc;
+  logic [M_WIDTH:0] sum_x;
 
   assign sum_k = k_a + k_b;
-  assign sum_frac_trunc =
-        {1'b0, frac_a_trunc} +
-        {1'b0, frac_b_trunc} +
-        compensation;
+  assign sum_x = x_a_trunc + x_b_trunc + compensation;
 
   // ============================================================================
-  // Restore to full 15-bit mantissa width for Mitchell's antilog
+  // Antilog (Alg 1 Step 5) - Following paper's approach
   // ============================================================================
-  logic [14:0] sum_frac_restored;
-
-  assign sum_frac_restored =
-      {sum_frac_trunc, {REM_WIDTH{1'b0}}};  // pad LSBs
-
-  // ============================================================================
-  // Antilog (Mitchell)
-  // ============================================================================
+  logic carry_x;
+  logic [5:0] final_k;
+  logic [M_WIDTH-1:0] final_x;
+  logic [31:0] mantissa_reconst;
   logic [31:0] result_mag;
-  int shift_amt;
-  logic [14:0] mantissa;
+
+  assign carry_x = sum_x[M_WIDTH];
+  assign final_k = sum_k + carry_x;
+  assign final_x = sum_x[M_WIDTH-1:0];
+  assign mantissa_reconst = {1'b1, final_x};
 
   always_comb begin
     if (abs_a == 0 || abs_b == 0) begin
-      result_mag = 0;
-
+      result_mag = 32'b0;
     end else begin
-      if (sum_frac_restored[14]) begin
-        // mantissa >= 1.0
-        int shift_amt;
-        shift_amt = (sum_k + 1) - 15;
-
-        if (shift_amt >= 0)
-            result_mag = {16'b0, sum_frac_restored} << shift_amt;
-        else
-            result_mag = {16'b0, sum_frac_restored} >> -shift_amt;
-
-      end else begin
-        // mantissa < 1.0 → add implicit 1.0 (bit 14)
-        logic [14:0] mantissa;
-        int shift_amt;
-        mantissa = (15'h4000 | sum_frac_restored);
-        shift_amt = sum_k - 15;
-
-        if (shift_amt >= 0)
-            result_mag = {16'b0, mantissa} << shift_amt;
-        else
-            result_mag = {16'b0, mantissa} >> -shift_amt;
-      end
+      // Shift mantissa to position final_k
+      if (final_k >= M_WIDTH)
+        result_mag = mantissa_reconst << (final_k - M_WIDTH);
+      else
+        result_mag = mantissa_reconst >> (M_WIDTH - final_k);
     end
   end
 
