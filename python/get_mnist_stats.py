@@ -58,10 +58,12 @@ for i in range(0, SVERILOG_BATCH_COUNT):
         # 1. Load Approximate Predictions
         approx_file = ROOT_DIR + "mult{}_{}in_layer{}_out.txt".format(VERSION, i, layer_idx)
         
-        # STRICT CHECK: Error out immediately if file is missing
+        # Soft check: If file is missing, skip this layer (useful for Last Layer Mode)
         if not os.path.exists(approx_file):
-            print(f"CRITICAL ERROR: Output file not found: {approx_file}")
-            sys.exit(1)
+            # Only print warning once per layer to avoid spam
+            if i == 0:
+                print(f"Note: Output file not found for Layer {layer_idx}. Skipping stats for this layer.")
+            continue
 
         with open(approx_file) as pfile:
             approx_bin = pfile.readlines()
@@ -118,11 +120,9 @@ for layer_idx in range(SVERILOG_FINAL_LAYER + 1):
     
     if stats['count'] > 0:
         med = stats['total_err'] / stats['count']
+        nmed = med / normalization_factor
+        print(f"{layer_idx:<10} | {med:<15.4f} | {nmed:<15.6f} | {nmed*100:<15.4f}%")
     else:
-        med = 0.0
-        
-    nmed = med / normalization_factor
-    
-    print(f"{layer_idx:<10} | {med:<15.4f} | {nmed:<15.6f} | {nmed*100:<15.4f}%")
+        print(f"{layer_idx:<10} | {'N/A':<15} | {'N/A':<15} | {'N/A':<15}")
 
 print("-" * 65)

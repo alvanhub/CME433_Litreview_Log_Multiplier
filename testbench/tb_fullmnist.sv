@@ -125,7 +125,7 @@ module tb_fullmnist;
     end
     //last_layer_mode
     //MAKE SURE YOU RUN EXACT MULTIPLIER BEFORE RUNNING THE LAST LAYER MODE
-    last_layer_mode = 0;
+    last_layer_mode = 1;
 
     // initialization
     root_dir = "../";
