@@ -3,7 +3,7 @@
 
 module dr_alm_core #(
     parameter integer DWIDTH = 16,      // Data Width (8 or 16)
-    parameter integer TRUNC_WIDTH = 6   // 't' in the paper. t=6 is best tradeoff [cite: 320]
+    parameter integer M_WIDTH = 6   // 't' in the paper. t=6 is best tradeoff [cite: 320]
 )(
     input  logic signed [DWIDTH-1:0] i_a,
     input  logic signed [DWIDTH-1:0] i_b,
@@ -67,43 +67,50 @@ module dr_alm_core #(
     // Truncate to 't' bits.
     // The paper specifies taking the fractional parts x1, x2 and appending '1'
     // x1t <- {x1[n-2 .. n-t-1], 1'b1}
-    logic [TRUNC_WIDTH-1:0] x_a_trunc, x_b_trunc;
+    logic [M_WIDTH-1:0] x_a_trunc, x_b_trunc;
 
-    // We extract TRUNC_WIDTH-1 bits after the MSB, then append 1.
+    // We extract M_WIDTH-1 bits after the MSB, then append 1.
     // (DWIDTH-2) is the bit immediately following the Leading One.
-    assign x_a_trunc = {norm_a[(DWIDTH-2) -: (TRUNC_WIDTH-1)], 1'b1};
-    assign x_b_trunc = {norm_b[(DWIDTH-2) -: (TRUNC_WIDTH-1)], 1'b1};
+    assign x_a_trunc = {norm_a[(DWIDTH-2) -: (M_WIDTH-1)], 1'b1};
+    assign x_b_trunc = {norm_b[(DWIDTH-2) -: (M_WIDTH-1)], 1'b1};
 
     // -------------------------------------------------------------------------
     // 4. Adder and Compensation - Algorithm 1 Step 3 & 4 [cite: 161, 159]
     // -------------------------------------------------------------------------
     // Sum exponents (k)
     logic [$clog2(DWIDTH):0] sum_k; 
-    assign sum_k = k_a + k_b;
+    logic [M_WIDTH:0] sum_x;
 
-    // Sum mantissas + 1 (Compensation as per Eq 7 and Algo 1 Step 4)
-    logic [TRUNC_WIDTH:0] sum_x;
-    assign sum_x = x_a_trunc + x_b_trunc + 1'b1;
+
+    log_conv #(
+        .DWIDTH(DWIDTH),
+        .M_WIDTH(M_WIDTH)
+    ) log_adder (
+        .x1_t(x_a_trunc),
+        .x2_t(x_b_trunc),
+        .k1(k_a),
+        .k2(k_b),
+        .sum_k(sum_k),
+        .sum_x(sum_x)
+    );
 
     // -------------------------------------------------------------------------
     // 5. Antilogarithmic Converter - Algorithm 1 Step 5 
     // -------------------------------------------------------------------------
     // Check if mantissa sum overflowed (>= 1.0)
-    // If sum_x[TRUNC_WIDTH] is 1, it means x1+x2 >= 1
-    logic carry_x;
-    assign carry_x = sum_x[TRUNC_WIDTH];
-
-    // Calculate final exponent K
+    // If sum_x[M_WIDTH] is 1, it means x1+x2 >= 1
     logic [$clog2(DWIDTH):0] final_k;
-    assign final_k = sum_k + carry_x;
-
-    // Calculate final fractional part (xt)
-    logic [TRUNC_WIDTH-1:0] final_x;
-    assign final_x = sum_x[TRUNC_WIDTH-1:0];
-
-    // Reconstruct the value: {1.xt}
     logic [DWIDTH*2-1:0] mantissa_reconst;
-    assign mantissa_reconst = {1'b1, final_x};
+
+    antilog_conv #(
+        .DWIDTH(DWIDTH),
+        .M_WIDTH(M_WIDTH)
+    ) antilog_converter (
+        .sum_k(sum_k),
+        .sum_x(sum_x),
+        .final_k(final_k),
+        .mantissa_reconst(mantissa_reconst)
+    );
 
     // -------------------------------------------------------------------------
     // 6. Final Shifter
@@ -114,15 +121,15 @@ module dr_alm_core #(
             o_z = 0;
         end else begin
             // Shift the reconstructed mantissa to the correct power of 2
-            // The mantissa currently looks like: 1.xxxxx (width = TRUNC_WIDTH)
+            // The mantissa currently looks like: 1.xxxxx (width = M_WIDTH)
             // It effectively has a decimal point after the first bit.
             // We need to shift it so the MSB is at position 'final_k'.
             
             // Logic: Result = mantissa * 2^(final_k - width_of_fraction)
-            if (final_k >= TRUNC_WIDTH)
-                o_z = mantissa_reconst << (final_k - TRUNC_WIDTH);
+            if (final_k >= M_WIDTH)
+                o_z = mantissa_reconst << (final_k - M_WIDTH);
             else
-                o_z = mantissa_reconst >> (TRUNC_WIDTH - final_k);
+                o_z = mantissa_reconst >> (M_WIDTH - final_k);
 
             // Apply sign
             if (sign_z) o_z = -o_z;
