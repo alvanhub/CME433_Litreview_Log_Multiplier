@@ -54,6 +54,8 @@ module improved_MSB_dr_alm #(
 
     // Truncate to 't' bits.
     logic [KEEP_WIDTH-1:0] x_a_trunc, x_b_trunc;
+    logic [WIDTH - KEEP_WIDTH - 1:0] unused_bits_a, unused_bits_b;
+    logic round_bit_a, round_bit_b;
     
     // ORIGINAL LOGIC:
     // assign x_a_trunc = {norm_a[(WIDTH-2) -: (KEEP_WIDTH-1)], 1'b1};
@@ -62,8 +64,27 @@ module improved_MSB_dr_alm #(
     // UPDATED LOGIC:
     // We take KEEP_WIDTH bits directly starting from the bit after the Leading One bit.
     // This captures the (t-1) fraction bits and the next bit (MSB of the truncated part).
-    assign x_a_trunc = norm_a[(WIDTH-2) -: KEEP_WIDTH];
-    assign x_b_trunc = norm_b[(WIDTH-2) -: KEEP_WIDTH];
+    // assign x_a_trunc = norm_a[(WIDTH-2) -: KEEP_WIDTH];
+    // assign x_b_trunc = norm_b[(WIDTH-2) -: KEEP_WIDTH];
+    integer total_bits;
+    assign total_bits = 2^(WIDTH - KEEP_WIDTH-1) - 1;
+    assign unused_bits_a = norm_a[(KEEP_WIDTH-1):0];
+    assign unused_bits_b = norm_b[(KEEP_WIDTH-1):0];
+
+    always_comb begin
+        round_bit_a = 1'b0;
+        round_bit_b = 1'b0;
+
+        if (unused_bits_a > total_bits/2) begin
+            round_bit_a = 1'b1;
+        end
+
+        if (unused_bits_b > total_bits/2) begin
+            round_bit_b = 1'b1;
+        end
+    end
+    assign x_a_trunc = {norm_a[(WIDTH-2) -: (KEEP_WIDTH-1)], round_bit_a};
+    assign x_b_trunc = {norm_b[(WIDTH-2) -: (KEEP_WIDTH-1)], round_bit_b};
 
     // -------------------------------------------------------------------------
     // 4. Adder and Compensation - Algorithm 1 Step 3 & 4
