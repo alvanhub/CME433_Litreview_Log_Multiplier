@@ -99,6 +99,14 @@ module tb_fullmnist;
     );
   `endif
 
+  `ifdef MITCHELL_LOG_MULT
+    mitchell_log_mult_core mult (
+      .i_a(shifted_input),
+      .i_b(offset16),
+      .o_z(product32)
+    );
+  `endif
+
   initial begin
     if ($value$plusargs("V=%s", version)) begin
       $display(version);

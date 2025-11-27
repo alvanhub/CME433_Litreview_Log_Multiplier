@@ -1,4 +1,4 @@
-module mitchell_log_mult_core #(parameter W = 8, parameter N = 16)(
+module mitchell_log_mult_core #(parameter KEEP_WIDTH = 8, parameter WIDTH = 16)(
     input  logic [15:0] i_a,
     input  logic [15:0] i_b,
     output logic [31:0] o_z
@@ -7,9 +7,9 @@ module mitchell_log_mult_core #(parameter W = 8, parameter N = 16)(
     logic [4:0] k_a, k_b;
     logic [4:0] h_a, h_b;
     logic [15:0] x_a, x_b;
-    logic [W+$clog2(N):0] op1, op2;
-    logic [W+$clog2(N):0] L;
-    logic [$clog2(N):0] charac;
+    logic [KEEP_WIDTH+$clog2(WIDTH):0] op1, op2;
+    logic [KEEP_WIDTH+$clog2(WIDTH):0] L;
+    logic [$clog2(WIDTH):0] charac;
     logic [31:0] D;
     
     logic [15:0] abs_a, abs_b;
@@ -53,21 +53,21 @@ module mitchell_log_mult_core #(parameter W = 8, parameter N = 16)(
     assign k_a = h_a;
     assign k_b = h_b;
 
-    assign x_a = abs_a << (N - k_a - 1);
-    assign x_b = abs_b << (N - k_b - 1);
+    assign x_a = abs_a << (WIDTH - k_a - 1);
+    assign x_b = abs_b << (WIDTH - k_b - 1);
 
-    assign op1 = {1'b0, k_a, x_a[N-2:N-W]};
-    assign op2 = {1'b0, k_b, x_b[N-2:N-W]};
+    assign op1 = {1'b0, k_a, x_a[WIDTH-2:WIDTH-KEEP_WIDTH]};
+    assign op2 = {1'b0, k_b, x_b[WIDTH-2:WIDTH-KEEP_WIDTH]};
 
     assign L = op1 + op2;
 
-    assign charac = L[W+$clog2(N)-1:W-1];
+    assign charac = L[KEEP_WIDTH+$clog2(WIDTH)-1:KEEP_WIDTH-1];
     
-    assign m = {1'b1, L[W-2:0]}; // Reconstruct mantissa (1.fraction)
+    assign m = {1'b1, L[KEEP_WIDTH-2:0]}; // Reconstruct mantissa (1.fraction)
 
-    // Shift amount calculation: shift = charac - (W-1)
-    // W=8, W-1=7
-    assign D = (charac >= (W-1)) ? (m << (charac - (W-1))) : (m >> ((W-1) - charac));
+    // Shift amount calculation: shift = charac - (KEEP_WIDTH-1)
+    // KEEP_WIDTH=8, KEEP_WIDTH-1=7
+    assign D = (charac >= (KEEP_WIDTH-1)) ? (m << (charac - (KEEP_WIDTH-1))) : (m >> ((KEEP_WIDTH-1) - charac));
 
     assign result_abs = ((abs_a == 0) || (abs_b == 0)) ? 32'd0 : D;
     

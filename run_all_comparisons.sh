@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default multipliers to run if none provided
-DEFAULT_MULTIPLIERS=("exact" "LOG_MULT" "DR_ALM_CORE" "DR_ALM_IMPROVED")
+DEFAULT_MULTIPLIERS=("exact" "LOG_MULT" "DR_ALM_CORE" "DR_ALM_IMPROVED" "MITCHELL_LOG_MULT")
 
 # Check for arguments
 if [ $# -eq 0 ]; then
@@ -52,6 +52,11 @@ run_and_capture() {
             mult_name="Improved DR ALM"
             mult_version="improved"
             mult_module="improved_dr_alm_16_7trunc"
+            ;;
+        "MITCHELL_LOG_MULT")
+            mult_name="Mitchell Log Mult"
+            mult_version="mitchell_log_mult"
+            mult_module="mitchell_log_mult_core"
             ;;
         *)
             # Custom multiplier

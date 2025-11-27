@@ -6,3 +6,4 @@ work*/
 design_compiler/dc_files/*.txt
 *.log
 alib-52/
+sim/sim_output.txt
