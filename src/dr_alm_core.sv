@@ -2,22 +2,22 @@
 // Implements Algorithm 1 and Figure 2 from the paper.
 
 module dr_alm_core #(
-    parameter integer DWIDTH = 16,      // Data Width (8 or 16)
-    parameter integer M_WIDTH = 6   // 't' in the paper. t=6 is best tradeoff [cite: 320]
+    parameter integer WIDTH = 16,      // Data Width (8 or 16)
+    parameter integer KEEP_WIDTH = 6   // 't' in the paper. t=6 is best tradeoff [cite: 320]
 )(
-    input  logic signed [DWIDTH-1:0] i_a,
-    input  logic signed [DWIDTH-1:0] i_b,
-    output logic signed [(2*DWIDTH)-1:0] o_z
+    input  logic signed [WIDTH-1:0] i_a,
+    input  logic signed [WIDTH-1:0] i_b,
+    output logic signed [(2*WIDTH)-1:0] o_z
 );
 
     logic sign_a, sign_b, sign_z;
-    logic [DWIDTH-1:0] abs_a, abs_b;
+    logic [WIDTH-1:0] abs_a, abs_b;
     
     // -------------------------------------------------------------------------
     // 1. Sign Handling (Section 3.2)
     // -------------------------------------------------------------------------
-    assign sign_a = i_a[DWIDTH-1];
-    assign sign_b = i_b[DWIDTH-1];
+    assign sign_a = i_a[WIDTH-1];
+    assign sign_b = i_b[WIDTH-1];
     assign sign_z = sign_a ^ sign_b;
 
     // The paper suggests 1's complement + OR for approx sign, but standard
@@ -28,15 +28,15 @@ module dr_alm_core #(
     // -------------------------------------------------------------------------
     // 2. Leading One Detector (LOD) - Algorithm 1 Step 1 
     // -------------------------------------------------------------------------
-    logic [$clog2(DWIDTH)-1:0] k_a, k_b;
+    logic [$clog2(WIDTH)-1:0] k_a, k_b;
 
     // Helper function to find the Most Significant Bit (MSB) location
-    function automatic [$clog2(DWIDTH)-1:0] get_lod(input [DWIDTH-1:0] val);
+    function automatic [$clog2(WIDTH)-1:0] get_lod(input [WIDTH-1:0] val);
         int i;
         get_lod = 0;
-        for (i = DWIDTH-1; i >= 0; i = i - 1) begin
+        for (i = WIDTH-1; i >= 0; i = i - 1) begin
             if (val[i]) begin
-                get_lod = i[$clog2(DWIDTH)-1:0];
+                get_lod = i[$clog2(WIDTH)-1:0];
                 break;
             end
         end
@@ -60,31 +60,31 @@ module dr_alm_core #(
     // 3. Dynamic Truncation - Algorithm 1 Step 2 
     // -------------------------------------------------------------------------
     // Shift left to align the leading 1 to the MSB
-    logic [DWIDTH-1:0] norm_a, norm_b;
-    assign norm_a = abs_a << ((DWIDTH-1) - k_a);
-    assign norm_b = abs_b << ((DWIDTH-1) - k_b);
+    logic [WIDTH-1:0] norm_a, norm_b;
+    assign norm_a = abs_a << ((WIDTH-1) - k_a);
+    assign norm_b = abs_b << ((WIDTH-1) - k_b);
 
     // Truncate to 't' bits.
     // The paper specifies taking the fractional parts x1, x2 and appending '1'
     // x1t <- {x1[n-2 .. n-t-1], 1'b1}
-    logic [M_WIDTH-1:0] x_a_trunc, x_b_trunc;
+    logic [KEEP_WIDTH-1:0] x_a_trunc, x_b_trunc;
 
-    // We extract M_WIDTH-1 bits after the MSB, then append 1.
-    // (DWIDTH-2) is the bit immediately following the Leading One.
-    assign x_a_trunc = {norm_a[(DWIDTH-2) -: (M_WIDTH-1)], 1'b1};
-    assign x_b_trunc = {norm_b[(DWIDTH-2) -: (M_WIDTH-1)], 1'b1};
+    // We extract KEEP_WIDTH-1 bits after the MSB, then append 1.
+    // (WIDTH-2) is the bit immediately following the Leading One.
+    assign x_a_trunc = {norm_a[(WIDTH-2) -: (KEEP_WIDTH-1)], 1'b1};
+    assign x_b_trunc = {norm_b[(WIDTH-2) -: (KEEP_WIDTH-1)], 1'b1};
 
     // -------------------------------------------------------------------------
     // 4. Adder and Compensation - Algorithm 1 Step 3 & 4 [cite: 161, 159]
     // -------------------------------------------------------------------------
     // Sum exponents (k)
-    logic [$clog2(DWIDTH):0] sum_k; 
-    logic [M_WIDTH:0] sum_x;
+    logic [$clog2(WIDTH):0] sum_k; 
+    logic [KEEP_WIDTH:0] sum_x;
 
 
     log_conv #(
-        .DWIDTH(DWIDTH),
-        .M_WIDTH(M_WIDTH)
+        .WIDTH(WIDTH),
+        .KEEP_WIDTH(KEEP_WIDTH)
     ) log_adder (
         .x1_t(x_a_trunc),
         .x2_t(x_b_trunc),
@@ -98,13 +98,13 @@ module dr_alm_core #(
     // 5. Antilogarithmic Converter - Algorithm 1 Step 5 
     // -------------------------------------------------------------------------
     // Check if mantissa sum overflowed (>= 1.0)
-    // If sum_x[M_WIDTH] is 1, it means x1+x2 >= 1
-    logic [$clog2(DWIDTH):0] final_k;
-    logic [DWIDTH*2-1:0] mantissa_reconst;
+    // If sum_x[KEEP_WIDTH] is 1, it means x1+x2 >= 1
+    logic [$clog2(WIDTH):0] final_k;
+    logic [WIDTH*2-1:0] mantissa_reconst;
 
     antilog_conv #(
-        .DWIDTH(DWIDTH),
-        .M_WIDTH(M_WIDTH)
+        .WIDTH(WIDTH),
+        .KEEP_WIDTH(KEEP_WIDTH)
     ) antilog_converter (
         .sum_k(sum_k),
         .sum_x(sum_x),
@@ -121,15 +121,15 @@ module dr_alm_core #(
             o_z = 0;
         end else begin
             // Shift the reconstructed mantissa to the correct power of 2
-            // The mantissa currently looks like: 1.xxxxx (width = M_WIDTH)
+            // The mantissa currently looks like: 1.xxxxx (width = KEEP_WIDTH)
             // It effectively has a decimal point after the first bit.
             // We need to shift it so the MSB is at position 'final_k'.
             
             // Logic: Result = mantissa * 2^(final_k - width_of_fraction)
-            if (final_k >= M_WIDTH)
-                o_z = mantissa_reconst << (final_k - M_WIDTH);
+            if (final_k >= KEEP_WIDTH)
+                o_z = mantissa_reconst << (final_k - KEEP_WIDTH);
             else
-                o_z = mantissa_reconst >> (M_WIDTH - final_k);
+                o_z = mantissa_reconst >> (KEEP_WIDTH - final_k);
 
             // Apply sign
             if (sign_z) o_z = -o_z;

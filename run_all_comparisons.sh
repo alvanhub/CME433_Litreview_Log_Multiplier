@@ -45,8 +45,8 @@ run_and_capture() {
             ;;
         "DR_ALM_CORE")
             mult_name="DR ALM"
-            mult_version="dr_alm_core_16bit7trunc"
-            mult_module="dr_alm_core_16bit7trunc"
+            mult_version="dr_alm_core"
+            mult_module="dr_alm_core"
             ;;
         "DR_ALM_IMPROVED")
             mult_name="Improved DR ALM"

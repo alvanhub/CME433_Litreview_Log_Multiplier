@@ -84,7 +84,7 @@ module tb_fullmnist;
   `endif
 
   `ifdef DR_ALM_CORE
-    dr_alm_core_16bit7trunc mult (
+    dr_alm_core #(.WIDTH(16), .KEEP_WIDTH(7)) mult (
         .i_a(shifted_input),
         .i_b(offset16),
         .o_z(product32)
@@ -115,7 +115,7 @@ module tb_fullmnist;
     end
     //last_layer_mode
     //MAKE SURE YOU RUN EXACT MULTIPLIER BEFORE RUNNING THE LAST LAYER MODE
-    last_layer_mode = 1;
+    last_layer_mode = 0;
 
     // initialization
     root_dir = "../";
