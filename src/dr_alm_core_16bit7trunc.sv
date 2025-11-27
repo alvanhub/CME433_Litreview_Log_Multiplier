@@ -11,7 +11,7 @@ module dr_alm_core_16bit7trunc (
 
     // ================================ INSTANTIATE WHATEVER DESIGN YOU WANT HERE ================================
     // ============================================================================================================
-    dr_alm_core #(.DWIDTH(16), .TRUNC_WIDTH(3)) u_dr_alm (
+    dr_alm_core #(.DWIDTH(16), .M_WIDTH(7)) u_dr_alm (
     // dr_alm_16bit_signed #(.TRUNC_WIDTH(6)) u_dr_alm (
         .i_a(i_a),
         .i_b(i_b),

@@ -1,0 +1,99 @@
+QuestaSim-64 vlog 2020.1_1 Compiler 2020.03 Mar  4 2020
+Start time: 18:52:01 on Nov 26,2025
+vlog ../src/antilog_conv.sv ../src/base_log_mult.sv ../src/dc_exact_16bit.sv ../src/dr_alm_8bit_signed.sv ../src/dr_alm_core_16bit7trunc.sv ../src/dr_alm_core.sv ../src/exact_16bit_mult.sv ../src/exact_8bit_mult.sv ../src/hierarchical_lod_16bit.sv ../src/improved_16bit7trunc.sv ../src/improved_dr_alm_16_approx_lod.sv ../src/improved_dr_alm_16.sv ../src/improved_dr_alm.sv ../src/lod_4bit.sv ../src/log_conv.sv ../src/mitchell_log_mult_16bitn8.sv ../src/mitchell_log_mult_core.sv 
+-- Compiling module antilog_conv
+-- Compiling module base_log_mult
+-- Compiling module dc_exact_16bit
+-- Compiling module dr_alm_8bit_signed
+-- Compiling module dr_alm_core_16bit7trunc
+-- Compiling module dr_alm_core
+-- Compiling module exact_16bit_mult
+-- Compiling module exact_8bit_mult
+-- Compiling module hierarchical_lod_16bit
+-- Compiling module improved_dr_alm_16_7trunc
+-- Compiling module improved_dr_alm_16_approx_lod
+-- Compiling module improved_dr_alm_16
+-- Compiling module improved_dr_alm
+-- Compiling module lod4_bit
+-- Compiling module log_conv
+-- Compiling module mitchell_log_mult_16bitn8
+-- Compiling module mitchell_log_mult_core
+
+Top level modules:
+	base_log_mult
+	dc_exact_16bit
+	dr_alm_8bit_signed
+	dr_alm_core_16bit7trunc
+	exact_16bit_mult
+	improved_dr_alm_16_7trunc
+	improved_dr_alm_16
+	improved_dr_alm
+	mitchell_log_mult_16bitn8
+End time: 18:52:01 on Nov 26,2025, Elapsed time: 0:00:00
+Errors: 0, Warnings: 0
+QuestaSim-64 vlog 2020.1_1 Compiler 2020.03 Mar  4 2020
+Start time: 18:52:01 on Nov 26,2025
+vlog -define DR_ALM_IMPROVED ../testbench/tb_fullmnist.sv 
+-- Compiling package tb_fullmnist_sv_unit
+-- Compiling module tb_fullmnist
+
+Top level modules:
+	tb_fullmnist
+End time: 18:52:01 on Nov 26,2025, Elapsed time: 0:00:00
+Errors: 0, Warnings: 0
+QuestaSim-64 vopt 2020.1_1 Compiler 2020.03 Mar  4 2020
+Start time: 18:52:01 on Nov 26,2025
+vopt -work work tb_fullmnist -o tb_fullmnist_DR_ALM_IMPROVED_opt 
+
+Top level modules:
+	tb_fullmnist
+
+Analyzing design...
+-- Loading module tb_fullmnist
+-- Loading module improved_dr_alm_16_7trunc
+-- Loading module improved_dr_alm_16_approx_lod
+-- Loading module hierarchical_lod_16bit
+-- Loading module lod4_bit
+Incremental compilation check found no design-units have changed.
+Optimized design name is tb_fullmnist_DR_ALM_IMPROVED_opt
+End time: 18:52:01 on Nov 26,2025, Elapsed time: 0:00:00
+Errors: 0, Warnings: 0
+Reading pref.tcl
+
+# 2020.1_1
+
+# vsim -c "+V=DR_ALM_IMPROVED" tb_fullmnist_DR_ALM_IMPROVED_opt -do "run -all" 
+# Start time: 18:52:02 on Nov 26,2025
+# //  Questa Sim-64
+# //  Version 2020.1_1 linux_x86_64 Mar  4 2020
+# //
+# //  Copyright 1991-2020 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# Loading sv_std.std
+# Loading work.tb_fullmnist_sv_unit(fast)
+# Loading work.tb_fullmnist(fast)
+# run -all
+# DR_ALM_IMPROVED
+# Completed          10 inputs out of 100
+# Completed          20 inputs out of 100
+# Completed          30 inputs out of 100
+# Completed          40 inputs out of 100
+# Completed          50 inputs out of 100
+# Completed          60 inputs out of 100
+# Completed          70 inputs out of 100
+# Completed          80 inputs out of 100
+# Completed          90 inputs out of 100
+# Completed         100 inputs out of 100
+# ** Note: $finish    : ../testbench/tb_fullmnist.sv(264)
+#    Time: 234752 us  Iteration: 0  Instance: /tb_fullmnist
+# End time: 18:52:24 on Nov 26,2025, Elapsed time: 0:00:22
+# Errors: 0, Warnings: 0
