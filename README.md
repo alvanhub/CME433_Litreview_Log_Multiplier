@@ -21,6 +21,7 @@ You will likely not want to run all the multipliers at once (as this will take a
 ```bash
 ./run_all_comparisons.sh exact base_log_mult
 ```
+Please keep in mind that the exact multiplier must be run at least once before running the approximate multipliers, as it is used to generate the comparison results for the approximate multipliers.
 
 You may also want to shorten the range of `keep_widths` that are tested by modifying the necessary lines in the run_all_comparisons.sh script.
 
