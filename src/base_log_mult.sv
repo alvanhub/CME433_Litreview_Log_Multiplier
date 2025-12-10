@@ -4,9 +4,7 @@ module base_log_mult (
     output logic signed [31:0] o_z
 );
 
-  // ------------------------------------------------------------
   // Sign + Absolute
-  // ------------------------------------------------------------
   logic sign_a, sign_b, sign_z;
   logic [15:0] abs_a, abs_b;
 
@@ -17,9 +15,7 @@ module base_log_mult (
   assign abs_a = sign_a ? -i_a : i_a;
   assign abs_b = sign_b ? -i_b : i_b;
 
-  // ------------------------------------------------------------
-  // Leading-One Detector  (returns position 15→0)
-  // ------------------------------------------------------------
+  // Leading-One Detector
   function automatic [4:0] get_k(input logic [15:0] val);
     if (val[15]) return 15;
     if (val[14]) return 14;
@@ -44,11 +40,7 @@ module base_log_mult (
   assign k_a = get_k(abs_a);
   assign k_b = get_k(abs_b);
 
-  // ------------------------------------------------------------
-  // Normalize and extract fractional mantissa (15 bits)
-  // We shift so the leading 1 is at bit 15
-  // Then take bits [14:0] as the fractional mantissa
-  // ------------------------------------------------------------
+  // Normalize and extract fractional mantissa
   logic [15:0] norm_a, norm_b;
   logic [14:0] frac_a, frac_b;
 
@@ -58,20 +50,15 @@ module base_log_mult (
   assign frac_a = norm_a[14:0];
   assign frac_b = norm_b[14:0];
 
-  // ------------------------------------------------------------
   // Add characteristic + mantissas
   // frac sum must be 16 bits (1 extra bit to detect overflow)
-  // ------------------------------------------------------------
   logic [5:0] sum_k;
   logic [15:0] sum_frac;
 
   assign sum_k   = k_a + k_b;
   assign sum_frac = {1'b0, frac_a} + {1'b0, frac_b};
 
-  // ------------------------------------------------------------
   // Antilog (Mitchell approximation)
-  // output magnitude up to 32 bits
-  // ------------------------------------------------------------
   logic [31:0] result_mag;
 
   always_comb begin
@@ -105,9 +92,7 @@ module base_log_mult (
     end
   end
 
-  // ------------------------------------------------------------
   // Apply sign
-  // ------------------------------------------------------------
   assign o_z = sign_z ? -result_mag : result_mag;
 
 endmodule

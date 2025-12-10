@@ -5,7 +5,6 @@ module hierarchical_lod_16bit (
     output logic [3:0]  k
 );
 
-    // Stage 1 signals: Four 4-bit LODs
     logic [3:0] d [0:3];
     logic       or_out [0:3];
 

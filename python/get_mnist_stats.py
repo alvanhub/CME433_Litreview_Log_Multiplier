@@ -55,7 +55,7 @@ for i in range(0, SVERILOG_BATCH_COUNT):
     # Iterate through each layer for the current batch
     for layer_idx in range(SVERILOG_FINAL_LAYER + 1):
         
-        # 1. Load Approximate Predictions
+        # Load Approximate Predictions
         approx_file = ROOT_DIR + "mult{}_{}in_layer{}_out.txt".format(VERSION, i, layer_idx)
         
         # Soft check: If file is missing, skip this layer (useful for Last Layer Mode)
@@ -69,7 +69,7 @@ for i in range(0, SVERILOG_BATCH_COUNT):
             approx_bin = pfile.readlines()
         approx_preds = twoscomp_to_decimal(approx_bin, 8)
 
-        # 2. Load Exact (Golden) Predictions for NMED
+        # Load Exact Predictions for NMED
         exact_file = ROOT_DIR + "mult{}_{}in_layer{}_out.txt".format(GOLDEN_VERSION, i, layer_idx)
         
         if not os.path.exists(exact_file):
@@ -92,17 +92,12 @@ for i in range(0, SVERILOG_BATCH_COUNT):
         layer_stats[layer_idx]['total_err'] += np.sum(error_dist)
         layer_stats[layer_idx]['count'] += len(exact_preds_c)
 
-        # 3. Calculate Accuracy (Only applicable to the final layer)
+        # Calculate Accuracy (Only applicable to the final layer)
         if layer_idx == SVERILOG_FINAL_LAYER:
-            # check bounds to avoid crash if output is shorter than expected
             if len(approx_preds) > 0:
-                # Using argmax to find the predicted digit (0-9)
                 if approx_preds.argmax() == test_y[i]:
                     acc += 1
 
-# --- Final Metrics & Output ---
-
-# Final Layer Accuracy
 accuracy_percent = acc * 100 / SVERILOG_BATCH_COUNT
 
 print("\n" + "=" * 65)

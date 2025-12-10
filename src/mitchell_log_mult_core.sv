@@ -63,10 +63,8 @@ module mitchell_log_mult_core #(parameter KEEP_WIDTH = 8, parameter WIDTH = 16)(
 
     assign charac = L[KEEP_WIDTH+$clog2(WIDTH)-1:KEEP_WIDTH-1];
     
-    assign m = {1'b1, L[KEEP_WIDTH-2:0]}; // Reconstruct mantissa (1.fraction)
+    assign m = {1'b1, L[KEEP_WIDTH-2:0]}; // Reconstruct mantissa
 
-    // Shift amount calculation: shift = charac - (KEEP_WIDTH-1)
-    // KEEP_WIDTH=8, KEEP_WIDTH-1=7
     assign D = (charac >= (KEEP_WIDTH-1)) ? (m << (charac - (KEEP_WIDTH-1))) : (m >> ((KEEP_WIDTH-1) - charac));
 
     assign result_abs = ((abs_a == 0) || (abs_b == 0)) ? 32'd0 : D;

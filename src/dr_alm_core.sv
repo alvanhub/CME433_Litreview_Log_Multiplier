@@ -14,9 +14,7 @@ module dr_alm_core #(
     logic sign_a, sign_b, sign_z;
     logic [WIDTH-1:0] abs_a, abs_b;
     
-    // -------------------------------------------------------------------------
-    // 1. Sign Handling (Section 3.2)
-    // -------------------------------------------------------------------------
+    // Sign Handling
     assign sign_a = i_a[WIDTH-1];
     assign sign_b = i_b[WIDTH-1];
     assign sign_z = sign_a ^ sign_b;
@@ -26,81 +24,52 @@ module dr_alm_core #(
     assign abs_a = sign_a ? -i_a : i_a;
     assign abs_b = sign_b ? -i_b : i_b;
 
-    // -------------------------------------------------------------------------
-    // 2. Leading One Detector (LOD) - Algorithm 1 Step 1 
-    // -------------------------------------------------------------------------
+    // Leading One Detector (LOD)
     logic [$clog2(WIDTH)-1:0] k_a, k_b;
 
-    // Helper function to find the Most Significant Bit (MSB) location
-    // function automatic [$clog2(WIDTH)-1:0] get_lod(input [WIDTH-1:0] val);
-    //     int i;
-    //     get_lod = 0;
-    //     for (i = WIDTH-1; i >= 0; i = i - 1) begin
-    //         if (val[i]) begin
-    //             get_lod = i[$clog2(WIDTH)-1:0];
-    //             break;
-    //         end
-    //     end
-    // endfunction
     function automatic [$clog2(WIDTH)-1:0] get_lod_tree(input [WIDTH-1:0] val);
         // Pure tree-based LOD for 16-bit with 4 stages
-        // Each stage compares pairs and selects the position
         logic [3:0] lod_out;
         
-        // Stage 1: Check upper 8 vs lower 8
         if (val[15:8] != 0) begin
             lod_out[3] = 1'b1;
-            // Stage 2: Check upper 4 of bits [15:8]
             if (val[15:12] != 0) begin
                 lod_out[2] = 1'b1;
-                // Stage 3: Check upper 2 of bits [15:12]
                 if (val[15:14] != 0) begin
                     lod_out[1] = 1'b1;
-                    // Stage 4: Check bit 15 vs bit 14
                     lod_out[0] = val[15] ? 1'b1 : 1'b0;
                 end else begin
                     lod_out[1] = 1'b0;
-                    // Stage 4: Check bit 13 vs bit 12
                     lod_out[0] = val[13] ? 1'b1 : 1'b0;
                 end
             end else begin
                 lod_out[2] = 1'b0;
-                // Stage 3: Check upper 2 of bits [11:8]
                 if (val[11:10] != 0) begin
                     lod_out[1] = 1'b1;
-                    // Stage 4: Check bit 11 vs bit 10
                     lod_out[0] = val[11] ? 1'b1 : 1'b0;
                 end else begin
                     lod_out[1] = 1'b0;
-                    // Stage 4: Check bit 9 vs bit 8
                     lod_out[0] = val[9] ? 1'b1 : 1'b0;
                 end
             end
         end else begin
             lod_out[3] = 1'b0;
-            // Stage 2: Check upper 4 of bits [7:0]
             if (val[7:4] != 0) begin
                 lod_out[2] = 1'b1;
-                // Stage 3: Check upper 2 of bits [7:4]
                 if (val[7:6] != 0) begin
                     lod_out[1] = 1'b1;
-                    // Stage 4: Check bit 7 vs bit 6
                     lod_out[0] = val[7] ? 1'b1 : 1'b0;
                 end else begin
                     lod_out[1] = 1'b0;
-                    // Stage 4: Check bit 5 vs bit 4
                     lod_out[0] = val[5] ? 1'b1 : 1'b0;
                 end
             end else begin
                 lod_out[2] = 1'b0;
-                // Stage 3: Check upper 2 of bits [3:0]
                 if (val[3:2] != 0) begin
                     lod_out[1] = 1'b1;
-                    // Stage 4: Check bit 3 vs bit 2
                     lod_out[0] = val[3] ? 1'b1 : 1'b0;
                 end else begin
                     lod_out[1] = 1'b0;
-                    // Stage 4: Check bit 1 vs bit 0
                     lod_out[0] = val[1] ? 1'b1 : 1'b0;
                 end
             end
@@ -112,19 +81,7 @@ module dr_alm_core #(
     assign k_a = get_lod_tree(abs_a);
     assign k_b = get_lod_tree(abs_b);
 
-    // lod16 lod_inst_a (
-    //     .data_in(abs_a),
-    //     .lead_one_pos(k_a)
-    // );
-
-    // lod16 lod_inst_b (
-    //     .data_in(abs_b),
-    //     .lead_one_pos(k_b)
-    // );
-
-    // -------------------------------------------------------------------------
-    // 3. Dynamic Truncation - Algorithm 1 Step 2 
-    // -------------------------------------------------------------------------
+    // Dynamic Truncation
     // Shift left to align the leading 1 to the MSB
     logic [WIDTH-1:0] norm_a, norm_b;
     assign norm_a = abs_a << ((WIDTH-1) - k_a);
@@ -140,9 +97,7 @@ module dr_alm_core #(
     assign x_a_trunc = {norm_a[(WIDTH-2) -: (KEEP_WIDTH-1)], 1'b1};
     assign x_b_trunc = {norm_b[(WIDTH-2) -: (KEEP_WIDTH-1)], 1'b1};
 
-    // -------------------------------------------------------------------------
-    // 4. Adder and Compensation - Algorithm 1 Step 3 & 4 [cite: 161, 159]
-    // -------------------------------------------------------------------------
+    // Adder and Compensation
     // Sum exponents (k)
     logic [$clog2(WIDTH):0] sum_k; 
     logic [KEEP_WIDTH:0] sum_x;
@@ -160,11 +115,7 @@ module dr_alm_core #(
         .sum_x(sum_x)
     );
 
-    // -------------------------------------------------------------------------
-    // 5. Antilogarithmic Converter - Algorithm 1 Step 5 
-    // -------------------------------------------------------------------------
-    // Check if mantissa sum overflowed (>= 1.0)
-    // If sum_x[KEEP_WIDTH] is 1, it means x1+x2 >= 1
+    // Antilogarithmic Converter
     logic [$clog2(WIDTH):0] final_k;
     logic [WIDTH*2-1:0] mantissa_reconst;
 
@@ -178,20 +129,12 @@ module dr_alm_core #(
         .mantissa_reconst(mantissa_reconst)
     );
 
-    // -------------------------------------------------------------------------
-    // 6. Final Shifter
-    // -------------------------------------------------------------------------
+    // Final Shifter
     always_comb begin
         // Handle zero inputs explicitly (Log(0) is undefined)
         if (i_a == 0 || i_b == 0) begin
             o_z = 0;
         end else begin
-            // Shift the reconstructed mantissa to the correct power of 2
-            // The mantissa currently looks like: 1.xxxxx (width = KEEP_WIDTH)
-            // It effectively has a decimal point after the first bit.
-            // We need to shift it so the MSB is at position 'final_k'.
-            
-            // Logic: Result = mantissa * 2^(final_k - width_of_fraction)
             if (final_k >= KEEP_WIDTH)
                 o_z = mantissa_reconst << (final_k - KEEP_WIDTH);
             else
